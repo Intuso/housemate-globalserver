@@ -15,6 +15,7 @@ public class ApiV1_0Module extends JerseyResourceModule {
 
     @Override
     protected void configureServlets() {
-        filter("/api/1.0/*").through(OAuthFilter.class);
+        super.configureServlets();
+        filter("/api/1.0/test").through(OAuthFilter.class);
     }
 }

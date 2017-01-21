@@ -1,6 +1,9 @@
 package com.intuso.housemate.globalserver.web.oauth;
 
-import com.intuso.housemate.globalserver.oauth.OAuthClientRepository;
+import com.intuso.housemate.globalserver.database.Database;
+import com.intuso.housemate.globalserver.database.model.AuthzGrant;
+import com.intuso.housemate.globalserver.database.model.Client;
+import com.intuso.housemate.globalserver.database.model.Token;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuer;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
@@ -29,42 +32,38 @@ import java.net.URISyntaxException;
 @Path("/")
 public class OAuthResource {
 
-    private final OAuthClientRepository oAuthClientRepository;
+    private final Database database;
 
     @Inject
-    public OAuthResource(OAuthClientRepository oAuthClientRepository) {
-        this.oAuthClientRepository = oAuthClientRepository;
+    public OAuthResource(Database database) {
+        this.database = database;
     }
 
     @GET
     @Path("/authz")
     public Response authorize(@Context HttpServletRequest request) throws URISyntaxException, OAuthSystemException {
         try {
+
             OAuthAuthzRequest oauthRequest = new OAuthAuthzRequest(request);
             OAuthIssuerImpl oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
 
             //build response according to response_type
             String responseType = oauthRequest.getParam(OAuth.OAUTH_RESPONSE_TYPE);
 
-            OAuthASResponse.OAuthAuthorizationResponseBuilder builder =
-                    OAuthASResponse.authorizationResponse(request,
-                            HttpServletResponse.SC_FOUND);
+            OAuthASResponse.OAuthAuthorizationResponseBuilder builder = OAuthASResponse.authorizationResponse(request, HttpServletResponse.SC_FOUND);
 
             if (responseType.equals(ResponseType.CODE.toString())) {
-                final String authorizationCode =
-                        oauthIssuerImpl.authorizationCode();
-                oAuthClientRepository.addAuthCode(authorizationCode);
-                builder.setCode(authorizationCode);
+                String code = oauthIssuerImpl.authorizationCode();
+                // todo get the client and user that the auth grant is for
+                AuthzGrant authzGrant = new AuthzGrant(null, null, code);
+                database.addAuthzGrant(authzGrant);
+                builder.setCode(code);
             }
 
-            String redirectURI =
-                    oauthRequest.getParam(OAuth.OAUTH_REDIRECT_URI);
-            final OAuthResponse response = builder
-                    .location(redirectURI)
-                    .buildQueryMessage();
-            URI url = new URI(response.getLocationUri());
+            String redirectURI = oauthRequest.getParam(OAuth.OAUTH_REDIRECT_URI);
+            final OAuthResponse response = builder.location(redirectURI).buildQueryMessage();
             return Response.status(response.getResponseStatus())
-                    .location(url)
+                    .location(new URI(response.getLocationUri()))
                     .build();
         } catch (OAuthProblemException e) {
             OAuthResponse res = OAuthASResponse
@@ -86,21 +85,24 @@ public class OAuthResource {
             OAuthTokenRequest oauthRequest = new OAuthTokenRequest(request);
             OAuthIssuer oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
 
-            // check if clientid is valid
-            if (!oAuthClientRepository.isValidClient(oauthRequest.getClientId(), oauthRequest.getClientSecret()))
-                return buildBadRequestResponse("Invalid client id/secret");
+            Client client = database.getClient(oauthRequest.getClientId());
+            if (client == null)
+                return buildBadRequestResponse("Unknown client id: " + oauthRequest.getClientId());
 
             // do checking for different grant types
             if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.AUTHORIZATION_CODE.toString())) {
-                if (!oAuthClientRepository.isValidAuthCode(oauthRequest.getParam(OAuth.OAUTH_CODE)))
-                    return buildBadRequestResponse("Invalid auth code");
+                AuthzGrant authzGrant = database.getAuthzGrant(oauthRequest.getParam(OAuth.OAUTH_CODE));
+                if (authzGrant == null)
+                    return buildBadRequestResponse("Unknown auth code: " + oauthRequest.getParam(OAuth.OAUTH_CODE));
                 else {
-                    final String accessToken = oauthIssuerImpl.accessToken();
-                    oAuthClientRepository.addToken(accessToken);
+                    String tokenString = oauthIssuerImpl.accessToken();
+                    // todo get the user the token is for
+                    Token token = new Token(client, null, tokenString);
+                    database.addToken(token);
 
                     OAuthResponse response = OAuthASResponse
                             .tokenResponse(HttpServletResponse.SC_OK)
-                            .setAccessToken(accessToken)
+                            .setAccessToken(tokenString)
                             .setExpiresIn("3600")
                             .buildJSONMessage();
                     return Response.status(response.getResponseStatus())

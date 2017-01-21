@@ -1,7 +1,8 @@
 package com.intuso.housemate.globalserver.web.oauth;
 
 import com.google.inject.Inject;
-import com.intuso.housemate.globalserver.oauth.OAuthClientRepository;
+import com.intuso.housemate.globalserver.database.Database;
+import com.intuso.housemate.globalserver.database.model.Token;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.error.OAuthError;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
@@ -22,11 +23,11 @@ import java.io.IOException;
  */
 public class OAuthFilter implements Filter {
 
-    private final OAuthClientRepository oAuthClientRepository;
+    private final Database database;
 
     @Inject
-    public OAuthFilter(OAuthClientRepository oAuthClientRepository) {
-        this.oAuthClientRepository = oAuthClientRepository;
+    public OAuthFilter(Database database) {
+        this.database = database;
     }
 
     @Override
@@ -38,13 +39,19 @@ public class OAuthFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
             try {
-                // Make the OAuth Request out of this request
-                OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest((HttpServletRequest) request, ParameterStyle.HEADER);
-                // Get the access token
-                String accessToken = oauthRequest.getAccessToken();
 
-                // Validate the access token
-                if (oAuthClientRepository.isValidToken(accessToken))
+                // Make the OAuth Request out of this request
+                OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest((HttpServletRequest) request, ParameterStyle.QUERY);
+
+                // Get the access token
+                String tokenString = oauthRequest.getAccessToken();
+
+                // get the token object
+                Token token = database.getToken(tokenString);
+
+                // todo validate the client?
+                // todo insert the user id into the request so resources know which user access is granted to
+                if (token != null)
                     chain.doFilter(request, response);
                 else {
                     // Return the OAuth error message

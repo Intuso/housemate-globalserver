@@ -11,7 +11,7 @@ import com.intuso.housemate.globalserver.web.oauth.OAuthResourceConfig;
 public class OAuthModule extends JerseyResourceModule {
 
     public OAuthModule() {
-        super("/oauth/", OAuthResourceConfig.class);
+        super("/oauth/1.0/", OAuthResourceConfig.class);
     }
 
     @Override
