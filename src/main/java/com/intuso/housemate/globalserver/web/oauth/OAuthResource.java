@@ -1,7 +1,7 @@
 package com.intuso.housemate.globalserver.web.oauth;
 
 import com.intuso.housemate.globalserver.database.Database;
-import com.intuso.housemate.globalserver.database.model.AuthzGrant;
+import com.intuso.housemate.globalserver.database.model.Authorisation;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.Token;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
@@ -55,8 +55,8 @@ public class OAuthResource {
             if (responseType.equals(ResponseType.CODE.toString())) {
                 String code = oauthIssuerImpl.authorizationCode();
                 // todo get the client and user that the auth grant is for
-                AuthzGrant authzGrant = new AuthzGrant(null, null, code);
-                database.addAuthzGrant(authzGrant);
+                Authorisation authorisation = new Authorisation(null, null, code);
+                database.addAuthorisation(authorisation);
                 builder.setCode(code);
             }
 
@@ -91,8 +91,8 @@ public class OAuthResource {
 
             // do checking for different grant types
             if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.AUTHORIZATION_CODE.toString())) {
-                AuthzGrant authzGrant = database.getAuthzGrant(oauthRequest.getParam(OAuth.OAUTH_CODE));
-                if (authzGrant == null)
+                Authorisation authorisation = database.getAuthorisation(oauthRequest.getParam(OAuth.OAUTH_CODE));
+                if (authorisation == null)
                     return buildBadRequestResponse("Unknown auth code: " + oauthRequest.getParam(OAuth.OAUTH_CODE));
                 else {
                     String tokenString = oauthIssuerImpl.accessToken();

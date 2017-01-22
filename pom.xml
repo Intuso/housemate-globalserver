@@ -82,6 +82,12 @@
             <version>${oltu.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.apache.oltu.oauth2</groupId>

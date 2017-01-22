@@ -11,6 +11,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -20,6 +21,7 @@ import java.io.InputStreamReader;
 /**
  * Created by tomc on 21/01/17.
  */
+@Ignore // requires manual setting of the client id/secret and auth code until they're persisted or automated and we can run the server as part of this test
 public class TestOAuthClient {
 
     private final String AUTHZ = "http://localhost:8080/oauth/1.0/authz";

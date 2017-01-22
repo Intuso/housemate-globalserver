@@ -16,7 +16,7 @@ public class InMemoryDatabase implements Database {
 
     private final TreeMap<String, User> users = Maps.newTreeMap();
     private final TreeMap<String, Client> clients = Maps.newTreeMap();
-    private final Map<String, AuthzGrant> authzGrants = Maps.newHashMap();
+    private final Map<String, Authorisation> authzGrants = Maps.newHashMap();
     private final Map<String, Token> tokens = Maps.newHashMap();
 
     @Override
@@ -60,17 +60,17 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void addAuthzGrant(AuthzGrant authzGrant) {
-        authzGrants.put(authzGrant.getCode(), authzGrant);
+    public void addAuthorisation(Authorisation authorisation) {
+        authzGrants.put(authorisation.getCode(), authorisation);
     }
 
     @Override
-    public AuthzGrant getAuthzGrant(String code) {
+    public Authorisation getAuthorisation(String code) {
         return authzGrants.get(code);
     }
 
     @Override
-    public void deleteAuthzGrant(String code) {
+    public void deleteAuthorisation(String code) {
         authzGrants.remove(code);
     }
 

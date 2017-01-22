@@ -8,18 +8,18 @@ import com.intuso.housemate.globalserver.database.model.*;
 public interface Database {
 
     Page<User> listUsers(long offset, int limit);
-    User getUser(String id);
     void addUser(User user);
+    User getUser(String id);
     void deleteUser(String id);
 
     Page<Client> listClients(long offset, int limit);
-    Client getClient(String id);
     void addClient(Client client);
+    Client getClient(String id);
     void deleteClient(String id);
 
-    void addAuthzGrant(AuthzGrant authzGrant);
-    AuthzGrant getAuthzGrant(String code);
-    void deleteAuthzGrant(String code);
+    void addAuthorisation(Authorisation authorisation);
+    Authorisation getAuthorisation(String code);
+    void deleteAuthorisation(String code);
 
     void addToken(Token token);
     Token getToken(String token);

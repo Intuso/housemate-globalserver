@@ -3,15 +3,15 @@ package com.intuso.housemate.globalserver.database.model;
 /**
  * Created by tomc on 21/01/17.
  */
-public class AuthzGrant {
+public class Authorisation {
 
     private Client client;
     private User user;
     private String code;
 
-    public AuthzGrant() {}
+    public Authorisation() {}
 
-    public AuthzGrant(Client client, User user, String code) {
+    public Authorisation(Client client, User user, String code) {
         this.client = client;
         this.user = user;
         this.code = code;
