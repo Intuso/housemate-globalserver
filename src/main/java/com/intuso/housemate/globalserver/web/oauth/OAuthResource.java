@@ -4,6 +4,7 @@ import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Authorisation;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.Token;
+import com.intuso.housemate.globalserver.database.model.User;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuer;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -47,6 +49,13 @@ public class OAuthResource {
             OAuthAuthzRequest oauthRequest = new OAuthAuthzRequest(request);
             OAuthIssuerImpl oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
 
+            User user = database.getUser("294c7ff2-6dbd-4522-8f69-a94b6332cb73");
+            if(user == null)
+                return buildBadRequestResponse("Could not find user: 294c7ff2-6dbd-4522-8f69-a94b6332cb73");
+            Client client = database.getClient(oauthRequest.getClientId());
+            if(client == null)
+                return buildBadRequestResponse("Could not find client: " + oauthRequest.getClientId());
+
             //build response according to response_type
             String responseType = oauthRequest.getParam(OAuth.OAUTH_RESPONSE_TYPE);
 
@@ -54,8 +63,7 @@ public class OAuthResource {
 
             if (responseType.equals(ResponseType.CODE.toString())) {
                 String code = oauthIssuerImpl.authorizationCode();
-                // todo get the client and user that the auth grant is for
-                Authorisation authorisation = new Authorisation(null, null, code);
+                Authorisation authorisation = new Authorisation(client, user, code);
                 database.addAuthorisation(authorisation);
                 builder.setCode(code);
             }
@@ -80,14 +88,10 @@ public class OAuthResource {
     @Path("/token")
     @Consumes("application/x-www-form-urlencoded")
     @Produces("application/json")
-    public Response getToken(@Context HttpServletRequest request) throws OAuthSystemException {
+    public Response token(@Context HttpServletRequest request, MultivaluedMap<String, String> form) throws OAuthSystemException {
         try {
-            OAuthTokenRequest oauthRequest = new OAuthTokenRequest(request);
+            OAuthTokenRequest oauthRequest = new OAuthTokenRequest(new OAuthRequestWrapper(request, form));
             OAuthIssuer oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
-
-            Client client = database.getClient(oauthRequest.getClientId());
-            if (client == null)
-                return buildBadRequestResponse("Unknown client id: " + oauthRequest.getClientId());
 
             // do checking for different grant types
             if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.AUTHORIZATION_CODE.toString())) {
@@ -97,7 +101,7 @@ public class OAuthResource {
                 else {
                     String tokenString = oauthIssuerImpl.accessToken();
                     // todo get the user the token is for
-                    Token token = new Token(client, null, tokenString);
+                    Token token = new Token(authorisation.getClient(), authorisation.getUser(), tokenString);
                     database.addToken(token);
 
                     OAuthResponse response = OAuthASResponse
