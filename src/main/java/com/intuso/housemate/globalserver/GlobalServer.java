@@ -3,7 +3,7 @@ package com.intuso.housemate.globalserver;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import com.intuso.housemate.globalserver.database.inmemory.ioc.InMemoryDatabaseModule;
+import com.intuso.housemate.globalserver.database.mongo.ioc.MongoDatabaseModule;
 import com.intuso.housemate.globalserver.web.ioc.WebModule;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -23,7 +23,7 @@ public class GlobalServer {
         ServletContextHandler handler = new ServletContextHandler();
         handler.setContextPath("/");
         handler.addServlet(ServletHandler.Default404Servlet.class, "/");
-        Injector injector = Guice.createInjector(new WebModule(), new InMemoryDatabaseModule());
+        Injector injector = Guice.createInjector(new WebModule(), new MongoDatabaseModule());
         FilterHolder guiceFilter = new FilterHolder(injector.getInstance(GuiceFilter.class));
         handler.addFilter(guiceFilter, "/*", EnumSet.allOf(DispatcherType.class));
         server.setHandler(handler);
