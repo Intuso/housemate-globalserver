@@ -9,7 +9,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 public class ApiV1_0ResourceConfig extends GuiceHK2BridgedResourceConfig {
     public ApiV1_0ResourceConfig() {
         super(ClientResource.class,
-                TestOAuthResource.class,
+                DevicesResource.class,
                 UserResource.class);
         register(JacksonFeature.class);
     }
