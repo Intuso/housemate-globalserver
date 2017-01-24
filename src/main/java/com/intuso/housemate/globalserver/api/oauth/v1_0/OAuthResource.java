@@ -109,6 +109,9 @@ public class OAuthResource {
                             .setAccessToken(tokenString)
                             .setExpiresIn("3600")
                             .buildJSONMessage();
+
+                    database.deleteAuthorisation(authorisation.getCode());
+
                     return Response.status(response.getResponseStatus())
                             .entity(response.getBody()).build();
                 }
