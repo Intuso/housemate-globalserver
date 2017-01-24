@@ -6,11 +6,13 @@ package com.intuso.housemate.globalserver.database.model;
 public class User {
 
     private String id;
+    private String serverAddress;
 
     public User() {}
 
-    public User(String id) {
+    public User(String id, String serverAddress) {
         this.id = id;
+        this.serverAddress = serverAddress;
     }
 
     public String getId() {
@@ -19,5 +21,13 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    public void setServerAddress(String serverAddress) {
+        this.serverAddress = serverAddress;
     }
 }

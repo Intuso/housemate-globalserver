@@ -20,6 +20,10 @@
 
         <oltu.version>1.0.2</oltu.version>
         <housemate.client.version>1.0.0-SNAPSHOT</housemate.client.version>
+        <activemq.version>5.13.3</activemq.version>
+
+        <slf4j.version>1.7.21</slf4j.version>
+        <logback.version>1.1.2</logback.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
@@ -27,12 +31,14 @@
 
     <dependencies>
 
+        <!-- Webserver -->
         <dependency>
             <groupId>com.intuso.utilities</groupId>
             <artifactId>utilities-webserver</artifactId>
             <version>1.1.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- OAuth stuff -->
         <dependency>
             <groupId>org.apache.oltu.oauth2</groupId>
             <artifactId>org.apache.oltu.oauth2.authzserver</artifactId>
@@ -44,17 +50,48 @@
             <version>${oltu.version}</version>
         </dependency>
 
+        <!-- Database impl -->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>3.2.2</version>
         </dependency>
 
-        <!-- Other REST APIs -->
+        <!-- REST APIs -->
         <dependency>
             <groupId>com.intuso.housemate</groupId>
             <artifactId>housemate-client-1-0-rest</artifactId>
             <version>${housemate.client.version}</version>
+        </dependency>
+
+        <!-- For connecting to clients -->
+        <dependency>
+            <groupId>com.intuso.housemate</groupId>
+            <artifactId>housemate-client-1-0-proxy-simple</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-client</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
         <!-- Test dependencies -->

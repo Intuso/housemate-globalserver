@@ -1,6 +1,6 @@
 package com.intuso.housemate.globalserver.api.globalserver.v1_0;
 
-import com.intuso.housemate.globalserver.api.globalserver.v1_0.model.NewUser;
+import com.intuso.housemate.globalserver.api.globalserver.v1_0.model.UserNoId;
 import com.intuso.housemate.globalserver.api.globalserver.v1_0.model.Page;
 import com.intuso.housemate.globalserver.api.globalserver.v1_0.model.User;
 import com.intuso.housemate.globalserver.database.Database;
@@ -25,15 +25,17 @@ public class UserResource {
     @GET
     @Produces("application/json")
     public Page<User> list(@QueryParam("offset") long offset, @QueryParam("limit") int limit) {
-        return Page.from(database.listUsers(offset, limit), User::from);
+        return Page.from(database.getUserPage(offset, limit), User::from);
     }
 
     @POST
     @Consumes("application/json")
     @Produces("application/json")
-    public User create(NewUser newUser) {
-        com.intuso.housemate.globalserver.database.model.User user = new com.intuso.housemate.globalserver.database.model.User(UUID.randomUUID().toString());
-        database.addUser(user);
+    public User create(UserNoId userNoId) {
+        com.intuso.housemate.globalserver.database.model.User user = new com.intuso.housemate.globalserver.database.model.User(
+                UUID.randomUUID().toString(),
+                userNoId.getServerAddress());
+        database.updateUser(user);
         return User.from(user);
     }
 
@@ -42,6 +44,18 @@ public class UserResource {
     @Produces("application/json")
     public User get(@PathParam("id") String id) {
         return User.from(database.getUser(id));
+    }
+
+    @PUT
+    @Path("/{id}")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public User update(@PathParam("id") String id, UserNoId userNoId) {
+        com.intuso.housemate.globalserver.database.model.User existing = database.getUser(id);
+        if(userNoId.getServerAddress() != null)
+            existing.setServerAddress(userNoId.getServerAddress());
+        database.updateUser(existing);
+        return User.from(existing);
     }
 
     @DELETE

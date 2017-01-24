@@ -64,7 +64,7 @@ public class OAuthResource {
             if (responseType.equals(ResponseType.CODE.toString())) {
                 String code = oauthIssuerImpl.authorizationCode();
                 Authorisation authorisation = new Authorisation(client, user, code);
-                database.addAuthorisation(authorisation);
+                database.updateAuthorisation(authorisation);
                 builder.setCode(code);
             }
 
@@ -102,7 +102,7 @@ public class OAuthResource {
                     String tokenString = oauthIssuerImpl.accessToken();
                     // todo get the user the token is for
                     Token token = new Token(authorisation.getClient(), authorisation.getUser(), tokenString);
-                    database.addToken(token);
+                    database.updateToken(token);
 
                     OAuthResponse response = OAuthASResponse
                             .tokenResponse(HttpServletResponse.SC_OK)

@@ -1,29 +1,40 @@
 package com.intuso.housemate.globalserver.database;
 
 import com.intuso.housemate.globalserver.database.model.*;
+import com.intuso.utilities.listener.ListenerRegistration;
+
+import java.util.stream.Stream;
 
 /**
  * Created by tomc on 21/01/17.
  */
 public interface Database {
 
-    Page<User> listUsers(long offset, int limit);
-    void addUser(User user);
+    Stream<User> getUsers();
+    Page<User> getUserPage(long offset, int limit);
+    void updateUser(User user);
     User getUser(String id);
     void deleteUser(String id);
 
-    Page<Client> listClients(long offset, int limit);
-    void addClient(Client client);
+    Page<Client> getClientPage(long offset, int limit);
+    void updateClient(Client client);
     Client getClient(String id);
     void deleteClient(String id);
 
-    void addAuthorisation(Authorisation authorisation);
+    void updateAuthorisation(Authorisation authorisation);
     Authorisation getAuthorisation(String code);
     void deleteAuthorisation(String code);
 
-    void addToken(Token token);
+    void updateToken(Token token);
     Token getToken(String token);
     void deleteToken(String token);
-    Page<Token> getUserTokens(String id, long offset, int limit);
-    Page<Token> getClientTokens(String id, long offset, int limit);
+    Page<Token> getUserTokenPage(String id, long offset, int limit);
+    Page<Token> getClientTokenPage(String id, long offset, int limit);
+
+    ListenerRegistration addListener(Listener listener);
+
+    interface Listener {
+        void userUpdated(User user);
+        void clientUpdated(Client client);
+    }
 }

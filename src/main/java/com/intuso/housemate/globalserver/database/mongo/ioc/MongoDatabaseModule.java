@@ -1,6 +1,7 @@
 package com.intuso.housemate.globalserver.database.mongo.ioc;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.mongo.MongoDatabaseImpl;
 
@@ -11,5 +12,6 @@ public class MongoDatabaseModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Database.class).to(MongoDatabaseImpl.class);
+        bind(MongoDatabaseImpl.class).in(Scopes.SINGLETON);
     }
 }

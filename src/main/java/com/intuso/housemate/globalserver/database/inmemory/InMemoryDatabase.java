@@ -1,8 +1,12 @@
 package com.intuso.housemate.globalserver.database.inmemory;
 
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.*;
+import com.intuso.utilities.listener.ListenerRegistration;
+import com.intuso.utilities.listener.Listeners;
+import com.intuso.utilities.listener.ListenersFactory;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,13 +18,25 @@ import java.util.stream.Stream;
  */
 public class InMemoryDatabase implements Database {
 
+    private final Listeners<Listener> listeners;
+
     private final TreeMap<String, User> users = Maps.newTreeMap();
     private final TreeMap<String, Client> clients = Maps.newTreeMap();
     private final Map<String, Authorisation> authzGrants = Maps.newHashMap();
     private final Map<String, Token> tokens = Maps.newHashMap();
 
+    @Inject
+    public InMemoryDatabase(ListenersFactory listenersFactory) {
+        listeners = listenersFactory.create();
+    }
+
     @Override
-    public Page<User> listUsers(long offset, int limit) {
+    public Stream<User> getUsers() {
+        return users.values().stream();
+    }
+
+    @Override
+    public Page<User> getUserPage(long offset, int limit) {
         return page(users.values().stream(), offset, limit, users.size());
     }
 
@@ -30,8 +46,10 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void addUser(User user) {
+    public void updateUser(User user) {
         users.put(user.getId(), user);
+        for(Listener listener : listeners)
+            listener.userUpdated(user);
     }
 
     @Override
@@ -40,7 +58,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public Page<Client> listClients(long offset, int limit) {
+    public Page<Client> getClientPage(long offset, int limit) {
         return page(clients.values().stream(), offset, limit, clients.size());
     }
 
@@ -50,8 +68,10 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void addClient(Client client) {
+    public void updateClient(Client client) {
         clients.put(client.getId(), client);
+        for(Listener listener : listeners)
+            listener.clientUpdated(client);
     }
 
     @Override
@@ -60,7 +80,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void addAuthorisation(Authorisation authorisation) {
+    public void updateAuthorisation(Authorisation authorisation) {
         authzGrants.put(authorisation.getCode(), authorisation);
     }
 
@@ -75,7 +95,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void addToken(Token token) {
+    public void updateToken(Token token) {
         tokens.put(token.getToken(), token);
     }
 
@@ -90,13 +110,18 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public Page<Token> getUserTokens(String id, long offset, int limit) {
+    public Page<Token> getUserTokenPage(String id, long offset, int limit) {
         return page(tokens.values().stream().filter(token -> token.getUser().getId().equals(id)), offset, limit, 0);
     }
 
     @Override
-    public Page<Token> getClientTokens(String id, long offset, int limit) {
+    public Page<Token> getClientTokenPage(String id, long offset, int limit) {
         return page(tokens.values().stream().filter(token -> token.getClient().getId().equals(id)), offset, limit, 0);
+    }
+
+    @Override
+    public ListenerRegistration addListener(Listener listener) {
+        return listeners.addListener(listener);
     }
 
     private <T> Page<T> page(Stream<T> stream, long offset, int limit, long total) {
