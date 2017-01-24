@@ -4,6 +4,7 @@ import com.intuso.housemate.globalserver.database.model.Authorisation;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.Token;
 import com.intuso.housemate.globalserver.database.model.User;
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -17,13 +18,22 @@ public class TestMongoDatabase {
 
     private final MongoDatabaseImpl mongoDatabase = new MongoDatabaseImpl();
 
+    @After
+    public void cleanup() {
+        mongoDatabase.deleteClient("aUser");
+        mongoDatabase.deleteClient("aClient");
+        mongoDatabase.deleteAuthorisation("anAuthorisation");
+        mongoDatabase.deleteToken("aToken");
+    }
+
     @Test
     public void testCRDUser() {
-        User user = new User("aUser");
+        User user = new User("aUser", "some.server.com:1234");
         mongoDatabase.addUser(user);
         user = mongoDatabase.getUser("aUser");
         assertNotNull(user);
         assertEquals("aUser", user.getId());
+        assertEquals("some.server.com:1234", user.getServerAddress());
         mongoDatabase.deleteUser("aUser");
         user = mongoDatabase.getUser("aUser");
         assertNull(user);
@@ -31,7 +41,7 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDClient() {
-        User user = new User("aUser");
+        User user = new User("aUser", "some.server.com:1234");
         mongoDatabase.addUser(user);
         Client client = new Client(user, "aClient", "someSecret", "A Test Client");
         mongoDatabase.addClient(client);
@@ -49,7 +59,7 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDAuthorisation() {
-        User user = new User("aUser");
+        User user = new User("aUser", "some.server.com:1234");
         mongoDatabase.addUser(user);
         Client client = new Client(user, "aClient", "someSecret", "A Test Client");
         mongoDatabase.addClient(client);
@@ -69,7 +79,7 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDToken() {
-        User user = new User("aUser");
+        User user = new User("aUser", "some.server.com:1234");
         mongoDatabase.addUser(user);
         Client client = new Client(user, "aClient", "someSecret", "A Test Client");
         mongoDatabase.addClient(client);
