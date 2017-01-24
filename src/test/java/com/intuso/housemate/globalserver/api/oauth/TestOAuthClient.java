@@ -24,34 +24,35 @@ import java.io.InputStreamReader;
 @Ignore // requires manual setting of the client id/secret and auth code until they're persisted or automated and we can run the server as part of this test
 public class TestOAuthClient {
 
-    private final String AUTHZ = "http://localhost:8080/oauth/1.0/authz";
-    private final String TOKEN = "http://localhost:8080/oauth/1.0/token";
-    private final String TEST = "http://localhost:8080/api/1.0/test";
-    private final String CLIENT_ID = "2965157c-29fb-464f-8493-aca7eb4cc64d";
-    private final String CLIENT_SECRET = "4fe07cfd-d904-43bc-b54f-c58083988b8b";
-    private final String AUTH_CODE = "427fad00694b6bcf84bec615dfcde90a";
+    private final String AUTHZ_URL = "http://localhost:8080/api/oauth/1.0/authz";
+    private final String TOKEN_URL = "http://localhost:8080/api/oauth/1.0/token";
+    private final String TEST_URL = "http://localhost:8080/api/server/1.0/power";
+    private final String CLIENT_ID = "f3a0b38c-4329-444c-b083-834ead9992c1";
+    private final String CLIENT_SECRET = "762f32e1-cc32-4f3d-8af3-ef49bb030936";
+    private final String AUTH_CODE = "883b7dd7358b6c14f1809ddfdc26bb2b";
+    private final String TOKEN = "ad5327e7dd891ec6a99d7396abf8e575";
 
     @Test
     public void getAuthCode() throws OAuthSystemException {
 
         OAuthClientRequest authRequest = OAuthClientRequest
-                .authorizationLocation(AUTHZ)
+                .authorizationLocation(AUTHZ_URL)
                 .setResponseType(ResponseType.CODE.toString())
                 .setClientId(CLIENT_ID)
-                .setRedirectURI(TEST)
+                .setRedirectURI(TEST_URL)
                 .buildQueryMessage();
 
         System.out.println("Visit: " + authRequest.getLocationUri());
     }
 
     @Test
-    public void getTokenAndTestRequest() throws OAuthSystemException, OAuthProblemException, IOException {
+    public void getToken() throws OAuthSystemException, OAuthProblemException, IOException {
 
         //create OAuth client that uses custom http client under the hood
         OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
 
         OAuthClientRequest request = OAuthClientRequest
-                .tokenLocation(TOKEN)
+                .tokenLocation(TOKEN_URL)
                 .setGrantType(GrantType.AUTHORIZATION_CODE)
                 .setClientId(CLIENT_ID)
                 .setClientSecret(CLIENT_SECRET)
@@ -61,11 +62,16 @@ public class TestOAuthClient {
 
         OAuthJSONAccessTokenResponse oAuthResponse = oAuthClient.accessToken(request);
 
-        String accessToken = oAuthResponse.getAccessToken();
-        Long expiresIn = oAuthResponse.getExpiresIn();
+        System.out.println("Token: " + oAuthResponse.getAccessToken());
+    }
 
-        OAuthClientRequest bearerClientRequest = new OAuthBearerClientRequest(TEST)
-                .setAccessToken(accessToken)
+    @Test
+    public void makeOAuthRequest() throws OAuthSystemException, OAuthProblemException, IOException {
+
+        OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
+
+        OAuthClientRequest bearerClientRequest = new OAuthBearerClientRequest(TEST_URL)
+                .setAccessToken(TOKEN)
                 .buildQueryMessage();
 
         OAuthResourceResponse resourceResponse = oAuthClient.resource(bearerClientRequest, OAuth.HttpMethod.GET, OAuthResourceResponse.class);
