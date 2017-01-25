@@ -24,13 +24,17 @@ import java.io.InputStreamReader;
 @Ignore // requires manual setting of the client id/secret and auth code until they're persisted or automated and we can run the server as part of this test
 public class TestOAuthClient {
 
-    private final String AUTHZ_URL = "http://localhost:8080/api/oauth/1.0/authz";
-    private final String TOKEN_URL = "http://localhost:8080/api/oauth/1.0/token";
-    private final String TEST_URL = "http://localhost:8080/api/server/1.0/power";
     private final String CLIENT_ID = "f3a0b38c-4329-444c-b083-834ead9992c1";
     private final String CLIENT_SECRET = "762f32e1-cc32-4f3d-8af3-ef49bb030936";
     private final String AUTH_CODE = "883b7dd7358b6c14f1809ddfdc26bb2b";
     private final String TOKEN = "ad5327e7dd891ec6a99d7396abf8e575";
+    private final String DEVICE = "812576b6-c073-4118-8ef0-d04b47ff30cb";
+
+    private final String AUTHZ_URL = "http://localhost:8080/api/oauth/1.0/authz";
+    private final String TOKEN_URL = "http://localhost:8080/api/oauth/1.0/token";
+    private final String LIST_URL = "http://localhost:8080/api/server/1.0/power?limit=-1";
+    private final String ON_URL = "http://localhost:8080/api/server/1.0/power/" + DEVICE + "/on";
+    private final String OFF_URL = "http://localhost:8080/api/server/1.0/power/" + DEVICE + "/off";
 
     @Test
     public void getAuthCode() throws OAuthSystemException {
@@ -39,7 +43,7 @@ public class TestOAuthClient {
                 .authorizationLocation(AUTHZ_URL)
                 .setResponseType(ResponseType.CODE.toString())
                 .setClientId(CLIENT_ID)
-                .setRedirectURI(TEST_URL)
+                .setRedirectURI(LIST_URL)
                 .buildQueryMessage();
 
         System.out.println("Visit: " + authRequest.getLocationUri());
@@ -66,15 +70,31 @@ public class TestOAuthClient {
     }
 
     @Test
-    public void makeOAuthRequest() throws OAuthSystemException, OAuthProblemException, IOException {
+    public void testList() throws OAuthSystemException, OAuthProblemException, IOException {
 
         OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
 
-        OAuthClientRequest bearerClientRequest = new OAuthBearerClientRequest(TEST_URL)
+        OAuthClientRequest bearerClientRequest = new OAuthBearerClientRequest(LIST_URL)
                 .setAccessToken(TOKEN)
                 .buildQueryMessage();
 
         OAuthResourceResponse resourceResponse = oAuthClient.resource(bearerClientRequest, OAuth.HttpMethod.GET, OAuthResourceResponse.class);
+        BufferedReader br = new BufferedReader(new InputStreamReader(resourceResponse.getBodyAsInputStream()));
+        String line;
+        while((line = br.readLine()) != null)
+            System.out.println(line);
+    }
+
+    @Test
+    public void testOn() throws OAuthSystemException, OAuthProblemException, IOException {
+
+        OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
+
+        OAuthClientRequest bearerClientRequest = new OAuthBearerClientRequest(ON_URL)
+                .setAccessToken(TOKEN)
+                .buildQueryMessage();
+
+        OAuthResourceResponse resourceResponse = oAuthClient.resource(bearerClientRequest, OAuth.HttpMethod.POST, OAuthResourceResponse.class);
         BufferedReader br = new BufferedReader(new InputStreamReader(resourceResponse.getBodyAsInputStream()));
         String line;
         while((line = br.readLine()) != null)
