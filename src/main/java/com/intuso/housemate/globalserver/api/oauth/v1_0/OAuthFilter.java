@@ -41,7 +41,7 @@ public class OAuthFilter implements Filter {
             try {
 
                 // Make the OAuth Request out of this request
-                OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest((HttpServletRequest) request, ParameterStyle.QUERY);
+                OAuthAccessResourceRequest oauthRequest = new OAuthAccessResourceRequest((HttpServletRequest) request, ParameterStyle.HEADER);
 
                 // Get the access token
                 String tokenString = oauthRequest.getAccessToken();
