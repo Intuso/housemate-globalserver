@@ -24,7 +24,7 @@ public class ClientResource {
 
     @GET
     @Produces("application/json")
-    public Page<Client> list(@QueryParam("offset") long offset, @QueryParam("limit") int limit) {
+    public Page<Client> list(@QueryParam("offset") @DefaultValue("0") long offset, @QueryParam("limit") @DefaultValue("20")  int limit) {
         return Page.from(database.getClientPage(offset, limit), Client::from);
     }
 

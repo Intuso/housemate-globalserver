@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by tomc on 23/01/17.
@@ -60,7 +61,12 @@ public class PowerResourceImpl implements PowerResource {
                 }
             }
         }
-        return new Page<>(offset, devices.size(), devices.stream().skip(offset).limit(limit).collect(Collectors.toList()));
+        Stream<Device.Data> stream  = devices.stream();
+        if(offset > 0)
+            stream = stream.skip(offset);
+        if(limit >= 0)
+            stream = stream.limit(limit);
+        return new Page<>(offset, devices.size(), stream.collect(Collectors.toList()));
     }
 
     @Override

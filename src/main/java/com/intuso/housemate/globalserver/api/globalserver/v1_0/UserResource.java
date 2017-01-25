@@ -24,7 +24,7 @@ public class UserResource {
 
     @GET
     @Produces("application/json")
-    public Page<User> list(@QueryParam("offset") long offset, @QueryParam("limit") int limit) {
+    public Page<User> list(@QueryParam("offset") @DefaultValue("0") long offset, @QueryParam("limit") @DefaultValue("20") int limit) {
         return Page.from(database.getUserPage(offset, limit), User::from);
     }
 
