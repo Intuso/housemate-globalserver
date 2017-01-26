@@ -5,8 +5,8 @@ import com.intuso.housemate.globalserver.database.model.Authorisation;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.Token;
 import com.intuso.housemate.globalserver.database.model.User;
-import com.intuso.utilities.listener.Listeners;
-import com.intuso.utilities.listener.ListenersFactory;
+import com.intuso.utilities.listener.ManagedCollection;
+import com.intuso.utilities.listener.ManagedCollectionFactory;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -19,10 +19,10 @@ import static org.junit.Assert.*;
 @Ignore // more of an integration test. Needs mongo running
 public class TestMongoDatabase {
 
-    private final MongoDatabaseImpl mongoDatabase = new MongoDatabaseImpl(new ListenersFactory() {
+    private final MongoDatabaseImpl mongoDatabase = new MongoDatabaseImpl(new ManagedCollectionFactory() {
         @Override
-        public <LISTENER> Listeners<LISTENER> create() {
-            return new Listeners<>(Lists.newArrayList());
+        public <LISTENER> ManagedCollection<LISTENER> create() {
+            return new ManagedCollection<>(Lists.newArrayList());
         }
     });
 

@@ -9,7 +9,7 @@ import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.User;
 import com.intuso.housemate.globalserver.servers.ioc.ServerModule;
-import com.intuso.utilities.listener.ListenerRegistration;
+import com.intuso.utilities.listener.MemberRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
 
     private final Injector injector;
     private final Database database;
-    private ListenerRegistration listenerRegistration;
+    private MemberRegistration listenerRegistration;
 
     private final Map<String, SimpleProxyServer> servers = Maps.newHashMap();
 

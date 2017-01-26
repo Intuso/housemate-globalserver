@@ -4,9 +4,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.*;
-import com.intuso.utilities.listener.ListenerRegistration;
-import com.intuso.utilities.listener.Listeners;
-import com.intuso.utilities.listener.ListenersFactory;
+import com.intuso.utilities.listener.MemberRegistration;
+import com.intuso.utilities.listener.ManagedCollection;
+import com.intuso.utilities.listener.ManagedCollectionFactory;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -18,7 +18,7 @@ import java.util.stream.Stream;
  */
 public class InMemoryDatabase implements Database {
 
-    private final Listeners<Listener> listeners;
+    private final ManagedCollection<Listener> listeners;
 
     private final TreeMap<String, User> users = Maps.newTreeMap();
     private final TreeMap<String, Client> clients = Maps.newTreeMap();
@@ -26,8 +26,8 @@ public class InMemoryDatabase implements Database {
     private final Map<String, Token> tokens = Maps.newHashMap();
 
     @Inject
-    public InMemoryDatabase(ListenersFactory listenersFactory) {
-        listeners = listenersFactory.create();
+    public InMemoryDatabase(ManagedCollectionFactory managedCollectionFactory) {
+        listeners = managedCollectionFactory.create();
     }
 
     @Override
@@ -120,8 +120,8 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public ListenerRegistration addListener(Listener listener) {
-        return listeners.addListener(listener);
+    public MemberRegistration addListener(Listener listener) {
+        return listeners.add(listener);
     }
 
     private <T> Page<T> page(Stream<T> stream, long offset, int limit, long total) {

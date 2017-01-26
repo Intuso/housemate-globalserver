@@ -7,9 +7,9 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.*;
-import com.intuso.utilities.listener.ListenerRegistration;
-import com.intuso.utilities.listener.Listeners;
-import com.intuso.utilities.listener.ListenersFactory;
+import com.intuso.utilities.listener.MemberRegistration;
+import com.intuso.utilities.listener.ManagedCollection;
+import com.intuso.utilities.listener.ManagedCollectionFactory;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -36,7 +36,7 @@ public class MongoDatabaseImpl implements Database {
 
     private final Logger logger = LoggerFactory.getLogger(MongoDatabaseImpl.class);
 
-    private final Listeners<Listener> listeners;
+    private final ManagedCollection<Listener> listeners;
 
     private final MongoCollection<Document> userCollection;
     private final MongoCollection<Document> clientCollection;
@@ -56,9 +56,9 @@ public class MongoDatabaseImpl implements Database {
     private final Function<Token, Document> fromToken;
 
     @Inject
-    public MongoDatabaseImpl(ListenersFactory listenersFactory) {
+    public MongoDatabaseImpl(ManagedCollectionFactory managedCollectionFactory) {
 
-        listeners = listenersFactory.create();
+        listeners = managedCollectionFactory.create();
 
         MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
 
@@ -249,7 +249,7 @@ public class MongoDatabaseImpl implements Database {
     }
 
     @Override
-    public ListenerRegistration addListener(Listener listener) {
-        return listeners.addListener(listener);
+    public MemberRegistration addListener(Listener listener) {
+        return listeners.add(listener);
     }
 }
