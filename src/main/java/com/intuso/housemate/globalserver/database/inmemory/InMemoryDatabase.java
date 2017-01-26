@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.*;
-import com.intuso.utilities.listener.MemberRegistration;
 import com.intuso.utilities.listener.ManagedCollection;
 import com.intuso.utilities.listener.ManagedCollectionFactory;
 
@@ -120,7 +119,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public MemberRegistration addListener(Listener listener) {
+    public ManagedCollection.Registration addListener(Listener listener) {
         return listeners.add(listener);
     }
 

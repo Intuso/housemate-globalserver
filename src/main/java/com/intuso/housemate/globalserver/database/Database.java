@@ -1,7 +1,7 @@
 package com.intuso.housemate.globalserver.database;
 
 import com.intuso.housemate.globalserver.database.model.*;
-import com.intuso.utilities.listener.MemberRegistration;
+import com.intuso.utilities.listener.ManagedCollection;
 
 import java.util.stream.Stream;
 
@@ -31,7 +31,7 @@ public interface Database {
     Page<Token> getUserTokenPage(String id, long offset, int limit);
     Page<Token> getClientTokenPage(String id, long offset, int limit);
 
-    MemberRegistration addListener(Listener listener);
+    ManagedCollection.Registration addListener(Listener listener);
 
     interface Listener {
         void userUpdated(User user);
