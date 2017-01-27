@@ -7,7 +7,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.intuso.housemate.globalserver.servers.ioc.ServersModule;
-import com.intuso.utilities.listener.ManagedCollectionFactory;
+import com.intuso.utilities.collection.ManagedCollectionFactory;
 import com.intuso.utilities.webserver.ioc.WebServerModule;
 
 import java.util.Set;

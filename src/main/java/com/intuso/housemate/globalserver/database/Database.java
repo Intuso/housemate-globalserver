@@ -1,7 +1,7 @@
 package com.intuso.housemate.globalserver.database;
 
 import com.intuso.housemate.globalserver.database.model.*;
-import com.intuso.utilities.listener.ManagedCollection;
+import com.intuso.utilities.collection.ManagedCollection;
 
 import java.util.stream.Stream;
 
