@@ -23,7 +23,7 @@ public class ConnectionProvider implements Provider<Connection> {
     @Override
     public Connection get() {
         try {
-            Connection connection = new ActiveMQConnectionFactory("tcp://" + address).createConnection();
+            Connection connection = new ActiveMQConnectionFactory("failover:tcp://" + address).createConnection();
             connection.start();
             return connection;
         } catch (JMSException e) {
