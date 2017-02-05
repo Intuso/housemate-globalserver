@@ -50,7 +50,7 @@ public class PowerResourceImpl implements PowerResource {
     @Override
     public Page<System.Data> list(int offset, int limit) {
         List<System.Data> devices = Lists.newArrayList();
-        for(SimpleProxySystem device : servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getDevices()) {
+        for(SimpleProxySystem device : servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems()) {
             // todo
 //            features:
 //            for (SimpleProxyFeature feature : device.getFeatures()) {
@@ -70,7 +70,7 @@ public class PowerResourceImpl implements PowerResource {
 
     @Override
     public boolean isOn(String id) {
-        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getDevices().get(id);
+        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems().get(id);
         // todo
 //        for(SimpleProxyFeature feature : device.getFeatures())
 //            if(feature.getValues().get("on") != null)
@@ -81,7 +81,7 @@ public class PowerResourceImpl implements PowerResource {
     @Override
     public void turnOn(String id) {
         logger.debug("Turning on {}", id);
-        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getDevices().get(id);
+        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems().get(id);
         // todo
 //        for(SimpleProxyFeature feature : device.getFeatures()) {
 //            if (feature.getCommands().get("on") != null) {
@@ -94,7 +94,7 @@ public class PowerResourceImpl implements PowerResource {
     @Override
     public void turnOff(String id) {
         logger.debug("Turning of {}", id);
-        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getDevices().get(id);
+        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems().get(id);
         // todo
 //        for(SimpleProxyFeature feature : device.getFeatures()) {
 //            if (feature.getCommands().get("off") != null) {
