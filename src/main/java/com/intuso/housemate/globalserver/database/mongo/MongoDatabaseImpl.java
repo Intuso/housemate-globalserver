@@ -68,9 +68,13 @@ public class MongoDatabaseImpl implements Database {
         logger.info("Using database " + database.getName());
 
         userCollection = database.getCollection("user");
+        userCollection.createIndex(new Document().append("email", 1));
         clientCollection = database.getCollection("client");
+        clientCollection.createIndex(new Document().append("owner", 1));
         authorisationCollection = database.getCollection("authorisation");
         tokenCollection = database.getCollection("token");
+        tokenCollection.createIndex(new Document().append("client", 1));
+        tokenCollection.createIndex(new Document().append("user", 1));
 
         userCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(7, TimeUnit.DAYS)
@@ -112,8 +116,9 @@ public class MongoDatabaseImpl implements Database {
                     }
                 });
 
-        toUser = document -> document == null ? null : new User(document.getString("_id"), document.getString("server"));
+        toUser = document -> document == null ? null : new User(document.getString("_id"), document.getString("email"), document.getString("server"));
         fromUser = user -> user == null ? null : new Document().append("_id", user.getId())
+                .append("email", user.getEmail())
                 .append("server", user.getServerAddress());
         toClient = document -> document == null ? null : new Client(userCache.getUnchecked(document.getString("owner")).orElse(null),
                 document.getString("_id"),
@@ -154,7 +159,7 @@ public class MongoDatabaseImpl implements Database {
 
     @Override
     public void updateUser(User user) {
-        clientCache.invalidate(user.getId());
+        userCache.invalidate(user.getId());
         userCollection.updateOne(eq("_id", user.getId()), new Document("$set", fromUser.apply(user)), new UpdateOptions().upsert(true));
         for(Listener listener : listeners)
             listener.userUpdated(user);
@@ -169,6 +174,14 @@ public class MongoDatabaseImpl implements Database {
     public void deleteUser(String id) {
         userCache.invalidate(id);
         userCollection.deleteOne(eq("_id", id));
+    }
+
+    @Override
+    public User authenticateUser(String email, String passwordHash) {
+        return toUser.apply(userCollection.find()
+                .filter(eq("email", email))
+                .filter(eq("passwordHash", passwordHash))
+                .limit(1).first());
     }
 
     @Override

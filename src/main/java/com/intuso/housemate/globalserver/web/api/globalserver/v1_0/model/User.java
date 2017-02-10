@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.database.model;
+package com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model;
 
 /**
  * Created by tomc on 21/01/17.
@@ -39,5 +39,9 @@ public class User {
 
     public void setServerAddress(String serverAddress) {
         this.serverAddress = serverAddress;
+    }
+
+    public static User from(com.intuso.housemate.globalserver.database.model.User user) {
+        return user == null ? null : new User(user.getId(), user.getEmail(), user.getServerAddress());
     }
 }

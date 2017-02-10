@@ -57,6 +57,14 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
+    public User authenticateUser(String email, String passwordHash) {
+        for(User user : users.values())
+            if(user.getEmail().equals(email))
+                return user; // todo check the password too.
+        return null;
+    }
+
+    @Override
     public Page<Client> getClientPage(long offset, int limit) {
         return page(clients.values().stream(), offset, limit, clients.size());
     }

@@ -1,29 +1,12 @@
-package com.intuso.housemate.globalserver.database.model;
+package com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model;
 
 /**
  * Created by tomc on 21/01/17.
  */
-public class User {
+public class UserNoId {
 
-    private String id;
     private String email;
     private String serverAddress;
-
-    public User() {}
-
-    public User(String id, String email, String serverAddress) {
-        this.id = id;
-        this.email = email;
-        this.serverAddress = serverAddress;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getEmail() {
         return email;

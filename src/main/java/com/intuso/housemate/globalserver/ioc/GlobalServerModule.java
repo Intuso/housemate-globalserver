@@ -7,7 +7,9 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.intuso.housemate.globalserver.servers.ioc.ServersModule;
+import com.intuso.housemate.globalserver.web.ioc.WebModule;
 import com.intuso.utilities.collection.ManagedCollectionFactory;
+import com.intuso.utilities.webserver.config.HttpPortConfig;
 import com.intuso.utilities.webserver.ioc.WebServerModule;
 
 import java.util.Set;
@@ -19,7 +21,9 @@ public class GlobalServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new WebServerModule());
+
+        install(new WebServerModule(new HttpPortConfig("0.0.0.0", 8090)));
+        install(new WebModule());
         install(new ServersModule());
 
         bind(ManagedCollectionFactory.class).to(ManagedCollectionFactoryImpl.class);

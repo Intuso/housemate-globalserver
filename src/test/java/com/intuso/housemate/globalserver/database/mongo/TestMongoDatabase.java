@@ -36,11 +36,12 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDUser() {
-        User user = new User("aUser", "some.server.com:1234");
+        User user = new User("aUser", "name@domain.com", "some.server.com:1234");
         mongoDatabase.updateUser(user);
         user = mongoDatabase.getUser("aUser");
         assertNotNull(user);
         assertEquals("aUser", user.getId());
+        assertEquals("name@domain.com", user.getEmail());
         assertEquals("some.server.com:1234", user.getServerAddress());
         mongoDatabase.deleteUser("aUser");
         user = mongoDatabase.getUser("aUser");
@@ -49,7 +50,7 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDClient() {
-        User user = new User("aUser", "some.server.com:1234");
+        User user = new User("aUser", "name@domain.com", "some.server.com:1234");
         mongoDatabase.updateUser(user);
         Client client = new Client(user, "aClient", "someSecret", "A Test Client");
         mongoDatabase.updateClient(client);
@@ -67,7 +68,7 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDAuthorisation() {
-        User user = new User("aUser", "some.server.com:1234");
+        User user = new User("aUser", "name@domain.com", "some.server.com:1234");
         mongoDatabase.updateUser(user);
         Client client = new Client(user, "aClient", "someSecret", "A Test Client");
         mongoDatabase.updateClient(client);
@@ -87,7 +88,7 @@ public class TestMongoDatabase {
 
     @Test
     public void testCRDToken() {
-        User user = new User("aUser", "some.server.com:1234");
+        User user = new User("aUser", "name@domain.com", "some.server.com:1234");
         mongoDatabase.updateUser(user);
         Client client = new Client(user, "aClient", "someSecret", "A Test Client");
         mongoDatabase.updateClient(client);
