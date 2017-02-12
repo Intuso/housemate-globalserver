@@ -4,7 +4,7 @@ import com.google.common.net.UrlEscapers;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Token;
-import com.intuso.housemate.globalserver.web.SessionAttributes;
+import com.intuso.housemate.globalserver.web.SessionUtils;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ParameterStyle;
@@ -78,8 +78,8 @@ public class SecurityFilter implements Filter {
 
             if(token != null) {
                 HttpSession session = request.getSession(true);
-                session.setAttribute(SessionAttributes.USER, token.getUser());
-                session.setAttribute(SessionAttributes.CLIENT, token.getClient());
+                SessionUtils.setUser(session, token.getUser());
+                SessionUtils.setClient(session, token.getClient());
             }
             return token != null;
 

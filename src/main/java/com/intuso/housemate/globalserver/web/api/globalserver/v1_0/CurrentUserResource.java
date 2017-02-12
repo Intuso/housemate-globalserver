@@ -1,6 +1,6 @@
 package com.intuso.housemate.globalserver.web.api.globalserver.v1_0;
 
-import com.intuso.housemate.globalserver.web.SessionAttributes;
+import com.intuso.housemate.globalserver.web.SessionUtils;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.User;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +18,6 @@ public class CurrentUserResource {
     @GET
     @Produces("application/json")
     public User getMe(@Context HttpServletRequest request) {
-        return (User) request.getSession().getAttribute(SessionAttributes.USER);
+        return User.from(SessionUtils.getUser(request.getSession()));
     }
 }

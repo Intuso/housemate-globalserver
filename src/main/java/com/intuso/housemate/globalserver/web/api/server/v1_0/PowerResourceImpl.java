@@ -2,16 +2,19 @@ package com.intuso.housemate.globalserver.web.api.server.v1_0;
 
 import com.google.common.collect.Lists;
 import com.intuso.housemate.client.v1_0.api.object.Command;
+import com.intuso.housemate.client.v1_0.api.object.Device;
 import com.intuso.housemate.client.v1_0.api.object.System;
-import com.intuso.housemate.client.v1_0.proxy.simple.SimpleProxyCommand;
-import com.intuso.housemate.client.v1_0.proxy.simple.SimpleProxySystem;
+import com.intuso.housemate.client.v1_0.proxy.simple.*;
 import com.intuso.housemate.client.v1_0.rest.PowerResource;
 import com.intuso.housemate.client.v1_0.rest.model.Page;
 import com.intuso.housemate.globalserver.servers.Servers;
+import com.intuso.housemate.globalserver.web.SessionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,25 +45,23 @@ public class PowerResourceImpl implements PowerResource {
         }
     };
 
+    @Context
+    private HttpServletRequest request;
+
     @Inject
     public PowerResourceImpl(Servers servers) {
         this.servers = servers;
     }
 
     @Override
-    public Page<System.Data> list(int offset, int limit) {
-        List<System.Data> devices = Lists.newArrayList();
-        for(SimpleProxySystem device : servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems()) {
-            // todo
-//            features:
-//            for (SimpleProxyFeature feature : device.getFeatures()) {
-//                if (feature.getCommands().get("on") != null) {
-//                    devices.add(new Device.Data(device.getId(), device.getName(), device.getDescription()));
-//                    break features;
-//                }
-//            }
-        }
-        Stream<System.Data> stream  = devices.stream();
+    public Page<Device.Data> list(int offset, int limit) {
+        List<Device.Data> devices = Lists.newArrayList();
+        for(SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
+            for(SimpleProxyHardware hardware : node.getHardwares())
+                for(SimpleProxyDevice device : hardware.getDevices())
+                  devices.add(new Device.Data(device.getId(), device.getName(), device.getDescription()));
+
+        Stream<Device.Data> stream  = devices.stream();
         if(offset > 0)
             stream = stream.skip(offset);
         if(limit >= 0)

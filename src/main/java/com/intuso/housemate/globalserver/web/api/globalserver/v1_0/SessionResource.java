@@ -1,7 +1,7 @@
 package com.intuso.housemate.globalserver.web.api.globalserver.v1_0;
 
 import com.intuso.housemate.globalserver.database.Database;
-import com.intuso.housemate.globalserver.web.SessionAttributes;
+import com.intuso.housemate.globalserver.web.SessionUtils;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.LoginResponse;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.User;
 import com.intuso.housemate.globalserver.web.security.Hasher;
@@ -50,12 +50,12 @@ public class SessionResource {
         else if(password == null || password.length() == 0)
             return new LoginResponse("No password provided");
         else {
-            User user = User.from(database.authenticateUser(email, hasher.hash(password)));
+            com.intuso.housemate.globalserver.database.model.User user = database.authenticateUser(email, hasher.hash(password));
             if (user != null) {
                 HttpSession session = request.getSession(true);
-                session.setAttribute(SessionAttributes.USER, user);
+                SessionUtils.setUser(session, user);
                 session.setMaxInactiveInterval(7 * 24 * 60 * 60); // 1 week
-                return new LoginResponse(user);
+                return new LoginResponse(User.from(user));
             } else
                 return new LoginResponse("Bad email/password");
         }
