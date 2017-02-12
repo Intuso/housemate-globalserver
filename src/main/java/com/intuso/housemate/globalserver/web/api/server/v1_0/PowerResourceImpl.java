@@ -3,7 +3,7 @@ package com.intuso.housemate.globalserver.web.api.server.v1_0;
 import com.google.common.collect.Lists;
 import com.intuso.housemate.client.v1_0.api.object.Command;
 import com.intuso.housemate.client.v1_0.api.object.Device;
-import com.intuso.housemate.client.v1_0.api.object.System;
+import com.intuso.housemate.client.v1_0.api.type.serialiser.BooleanSerialiser;
 import com.intuso.housemate.client.v1_0.proxy.simple.*;
 import com.intuso.housemate.client.v1_0.rest.PowerResource;
 import com.intuso.housemate.client.v1_0.rest.model.Page;
@@ -71,37 +71,41 @@ public class PowerResourceImpl implements PowerResource {
 
     @Override
     public boolean isOn(String id) {
-        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems().get(id);
-        // todo
-//        for(SimpleProxyFeature feature : device.getFeatures())
-//            if(feature.getValues().get("on") != null)
-//                return BooleanSerialiser.INSTANCE.deserialise(feature.getValues().get("on").getValue().getElements().get(0));
+        for(SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
+            for(SimpleProxyHardware hardware : node.getHardwares())
+                for(SimpleProxyDevice device : hardware.getDevices())
+                    if(device.getId().equals(id))
+                        return BooleanSerialiser.INSTANCE.deserialise(device.getValues().get("on").getValue().getElements().get(0));
         return false;
     }
 
     @Override
     public void turnOn(String id) {
         logger.debug("Turning on {}", id);
-        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems().get(id);
-        // todo
-//        for(SimpleProxyFeature feature : device.getFeatures()) {
-//            if (feature.getCommands().get("on") != null) {
-//                feature.getCommands().get("on").perform(loggerListener);
-//                return;
-//            }
-//        }
+        for(SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes()) {
+            for(SimpleProxyHardware hardware : node.getHardwares()) {
+                for(SimpleProxyDevice device : hardware.getDevices()) {
+                    if (device.getId().equals(id)) {
+                        device.getCommands().get("on").perform(loggerListener);
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public void turnOff(String id) {
-        logger.debug("Turning of {}", id);
-        SimpleProxySystem device = servers.getServer("294c7ff2-6dbd-4522-8f69-a94b6332cb73").getSystems().get(id);
-        // todo
-//        for(SimpleProxyFeature feature : device.getFeatures()) {
-//            if (feature.getCommands().get("off") != null) {
-//                feature.getCommands().get("off").perform(loggerListener);
-//                return;
-//            }
-//        }
+        logger.debug("Turning off {}", id);
+        for(SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes()) {
+            for(SimpleProxyHardware hardware : node.getHardwares()) {
+                for(SimpleProxyDevice device : hardware.getDevices()) {
+                    if (device.getId().equals(id)) {
+                        device.getCommands().get("off").perform(loggerListener);
+                        return;
+                    }
+                }
+            }
+        }
     }
 }
