@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
 
@@ -145,7 +146,7 @@ public class MongoDatabaseImpl implements Database {
     @Override
     public Stream<User> getUsers() {
         return StreamSupport.stream(userCollection.find().spliterator(), false)
-                        .map(toUser);
+                .map(toUser);
     }
 
     @Override
@@ -178,10 +179,10 @@ public class MongoDatabaseImpl implements Database {
 
     @Override
     public User authenticateUser(String email, String passwordHash) {
-        return toUser.apply(userCollection.find()
-                .filter(eq("email", email))
-                .filter(eq("passwordHash", passwordHash))
-                .limit(1).first());
+        return toUser.apply(userCollection.find(and(
+                eq("email", email),
+                eq("passwordHash", passwordHash)
+        )).limit(1).first());
     }
 
     @Override
