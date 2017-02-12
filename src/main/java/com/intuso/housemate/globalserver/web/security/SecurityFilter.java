@@ -1,6 +1,5 @@
 package com.intuso.housemate.globalserver.web.security;
 
-import com.google.common.net.UrlEscapers;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Token;
@@ -15,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
 
 /**
  * Created by tomc on 21/01/17.
@@ -60,7 +60,7 @@ public class SecurityFilter implements Filter {
 
             // not authorised to access the resource so redirect to login page
             else {
-                String encodedURL = UrlEscapers.urlPathSegmentEscaper().escape(getOriginalUrl(httpRequest));
+                String encodedURL = URLEncoder.encode(getOriginalUrl(httpRequest), "UTF-8");
                 httpResponse.sendRedirect(httpRequest.getContextPath() + httpRequest.getContextPath() + LOGIN_HTML + "?" + NEXT_PARAM + "=" + encodedURL);
             }
         }
@@ -118,7 +118,7 @@ public class SecurityFilter implements Filter {
             url = httpRequest.getRequestURL().toString();
 
         // if there are any query params, add them
-        if(httpRequest.getQueryString() != null && httpRequest.getQueryString().length() == 0)
+        if(httpRequest.getQueryString() != null && httpRequest.getQueryString().length() > 0)
             url += "?" + httpRequest.getQueryString();
 
         return url;
