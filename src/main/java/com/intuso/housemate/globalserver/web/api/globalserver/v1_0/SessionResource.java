@@ -1,20 +1,15 @@
 package com.intuso.housemate.globalserver.web.api.globalserver.v1_0;
 
 import com.intuso.housemate.globalserver.database.Database;
-import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.LoginDetails;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.LoginResponse;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.User;
 import com.intuso.housemate.globalserver.web.security.Hasher;
 
 import javax.inject.Inject;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import java.io.IOException;
 
@@ -34,39 +29,34 @@ public class SessionResource {
     }
 
     @POST
-    @Path("/login")
-    @Produces("application/json")
-    @Consumes("application/json")
-    public LoginResponse login(LoginDetails loginDetails,
-                               @Context HttpServletRequest request,
-                               @Context HttpServletResponse response) throws IOException {
-        if(loginDetails == null)
-            return new LoginResponse("No details provided");
-        else if(loginDetails.getEmail() == null || loginDetails.getEmail().length() == 0)
-            return new LoginResponse("No email");
-        else if(loginDetails.getPassword() == null || loginDetails.getPassword().length() == 0)
-            return new LoginResponse("No password provided");
-        else {
-            User user = User.from(database.authenticateUser(loginDetails.getEmail(), hasher.hash(loginDetails.getPassword())));
-            if (user != null) {
-                HttpSession session = request.getSession(true);
-                session.setAttribute("user", user);
-                //setting session to expiry in 30 mins
-                session.setMaxInactiveInterval(7 * 24 * 60 * 60);
-                Cookie userName = new Cookie("user", loginDetails.getEmail());
-                userName.setMaxAge(7 * 24 * 60 * 60);
-                response.addCookie(userName);
-                return new LoginResponse(user);
-            } else
-                return new LoginResponse("Bad email/password");
-        }
-    }
-
-    @POST
     @Path("/logout")
     public void logout(@Context HttpServletRequest request) {
         HttpSession session = request.getSession();
         if(session != null)
             session.invalidate();
+    }
+
+    @POST
+    @Path("/login")
+    @Consumes("application/x-www-form-urlencoded")
+    @Produces("application/json")
+    public LoginResponse login(@FormParam("email") String email,
+                               @FormParam("password") String password,
+                               @Context HttpServletRequest request,
+                               @Context HttpServletResponse response) throws IOException {
+        if(email == null || email.length() == 0)
+            return new LoginResponse("No email");
+        else if(password == null || password.length() == 0)
+            return new LoginResponse("No password provided");
+        else {
+            User user = User.from(database.authenticateUser(email, hasher.hash(password)));
+            if (user != null) {
+                HttpSession session = request.getSession(true);
+                session.setAttribute("user", user);
+                session.setMaxInactiveInterval(7 * 24 * 60 * 60); // 1 week
+                return new LoginResponse(user);
+            } else
+                return new LoginResponse("Bad email/password");
+        }
     }
 }

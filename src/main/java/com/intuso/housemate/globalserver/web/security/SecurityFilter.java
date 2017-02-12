@@ -1,5 +1,6 @@
 package com.intuso.housemate.globalserver.web.security;
 
+import com.google.common.net.UrlEscapers;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Token;
@@ -18,7 +19,8 @@ import java.io.IOException;
  */
 public class SecurityFilter implements Filter {
 
-    public final static String LOGIN_HTML = "/login.html";
+    public final static String LOGIN_HTML = "/login/index.html";
+    public final static String NEXT_PARAM = "next";
     public final static String LOGIN_JS = "/js/login.js";
     public final static String LOGIN_1_0_ENDPOINT = "/api/globalserver/1.0/session/login";
 
@@ -48,8 +50,13 @@ public class SecurityFilter implements Filter {
                 chain.doFilter(request, response);
             else if (isLoginRelated(httpRequest))
                 chain.doFilter(request, response);
-            else
-                httpResponse.sendRedirect(httpRequest.getContextPath() + LOGIN_HTML);
+
+            // not authorised to access the resource so redirect to login page
+            else {
+                // encode current url and as a param so the request
+                String encodedURL = UrlEscapers.urlPathSegmentEscaper().escape(httpRequest.getRequestURL().toString());
+                httpResponse.sendRedirect(httpRequest.getContextPath() + LOGIN_HTML + "?" + NEXT_PARAM + "=" + encodedURL);
+            }
         }
 
         // not an http request, just ignore it
@@ -81,8 +88,6 @@ public class SecurityFilter implements Filter {
     }
 
     private boolean isLoginRelated(HttpServletRequest request) {
-        return (request.getMethod().equals("GET") && request.getRequestURI().equals(LOGIN_HTML))
-                || (request.getMethod().equals("GET") && request.getRequestURI().equals(LOGIN_JS))
-                || (request.getMethod().equals("POST") && request.getRequestURI().equals(LOGIN_1_0_ENDPOINT));
+        return request.getMethod().equals("POST") && request.getRequestURI().equals(LOGIN_1_0_ENDPOINT);
     }
 }
