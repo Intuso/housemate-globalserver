@@ -21,10 +21,15 @@ import java.io.IOException;
  */
 public class SecurityFilter implements Filter {
 
+    public final static String OAUTH_TOKEN = "/api/oauth/1.0/token";
+
     public final static String LOGIN_HTML = "/login/index.html";
-    public final static String NEXT_PARAM = "next";
     public final static String LOGIN_JS = "/js/login.js";
     public final static String LOGIN_1_0_ENDPOINT = "/api/globalserver/1.0/session/login";
+
+    public final static String NEXT_PARAM = "next";
+
+    public final static String X_FORWARDED_FOR = "X-Forwarded-For";
 
     private final Database database;
 
@@ -50,14 +55,13 @@ public class SecurityFilter implements Filter {
                 chain.doFilter(request, response);
             else if (isValidSession(httpRequest))
                 chain.doFilter(request, response);
-            else if (isLoginRelated(httpRequest))
+            else if (isPartOfAuthFlow(httpRequest))
                 chain.doFilter(request, response);
 
             // not authorised to access the resource so redirect to login page
             else {
-                // encode current url and as a param so the request
-                String encodedURL = UrlEscapers.urlPathSegmentEscaper().escape(httpRequest.getRequestURL().toString());
-                httpResponse.sendRedirect(httpRequest.getContextPath() + LOGIN_HTML + "?" + NEXT_PARAM + "=" + encodedURL);
+                String encodedURL = UrlEscapers.urlPathSegmentEscaper().escape(getOriginalUrl(httpRequest));
+                httpResponse.sendRedirect(httpRequest.getContextPath() + httpRequest.getContextPath() + LOGIN_HTML + "?" + NEXT_PARAM + "=" + encodedURL);
             }
         }
 
@@ -92,12 +96,31 @@ public class SecurityFilter implements Filter {
         return request.getSession(false) != null;
     }
 
-    private boolean isLoginRelated(HttpServletRequest request) {
+    private boolean isPartOfAuthFlow(HttpServletRequest request) {
         return
                 (request.getMethod().equals("GET")
                         && (request.getRequestURI().equals(LOGIN_HTML)
                                 || request.getRequestURI().equals(LOGIN_JS)))
                 || (request.getMethod().equals("POST")
-                        && request.getRequestURI().equals(LOGIN_1_0_ENDPOINT));
+                        && (request.getRequestURI().equals(OAUTH_TOKEN)
+                                || request.getRequestURI().equals(LOGIN_1_0_ENDPOINT)));
+    }
+
+    private String getOriginalUrl(HttpServletRequest httpRequest) {
+
+        // get server and path info.
+        String url;
+        // If X-Forwarded-For header is set, use that as the base and append the uri
+        if(httpRequest.getHeader(X_FORWARDED_FOR) != null)
+            url = httpRequest.getHeader(X_FORWARDED_FOR) + httpRequest.getRequestURI();
+        // otherwise use the full url
+        else
+            url = httpRequest.getRequestURL().toString();
+
+        // if there are any query params, add them
+        if(httpRequest.getQueryString() != null && httpRequest.getQueryString().length() == 0)
+            url += "?" + httpRequest.getQueryString();
+
+        return url;
     }
 }
