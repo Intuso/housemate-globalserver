@@ -4,6 +4,7 @@ import com.google.common.net.UrlEscapers;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Token;
+import com.intuso.housemate.globalserver.web.SessionAttributes;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ParameterStyle;
@@ -12,6 +13,7 @@ import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
@@ -74,8 +76,11 @@ public class SecurityFilter implements Filter {
             // get the token object
             Token token = database.getToken(tokenString);
 
-            // todo validate the client?
-            // todo insert the user id into the request so resources know which user access is granted to
+            if(token != null) {
+                HttpSession session = request.getSession(true);
+                session.setAttribute(SessionAttributes.USER, token.getUser());
+                session.setAttribute(SessionAttributes.CLIENT, token.getClient());
+            }
             return token != null;
 
         } catch (OAuthSystemException | OAuthProblemException e) {
@@ -88,6 +93,11 @@ public class SecurityFilter implements Filter {
     }
 
     private boolean isLoginRelated(HttpServletRequest request) {
-        return request.getMethod().equals("POST") && request.getRequestURI().equals(LOGIN_1_0_ENDPOINT);
+        return
+                (request.getMethod().equals("GET")
+                        && (request.getRequestURI().equals(LOGIN_HTML)
+                                || request.getRequestURI().equals(LOGIN_JS)))
+                || (request.getMethod().equals("POST")
+                        && request.getRequestURI().equals(LOGIN_1_0_ENDPOINT));
     }
 }

@@ -1,6 +1,7 @@
 package com.intuso.housemate.globalserver.web.api.globalserver.v1_0;
 
 import com.intuso.housemate.globalserver.database.Database;
+import com.intuso.housemate.globalserver.web.SessionAttributes;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.LoginResponse;
 import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.User;
 import com.intuso.housemate.globalserver.web.security.Hasher;
@@ -52,7 +53,7 @@ public class SessionResource {
             User user = User.from(database.authenticateUser(email, hasher.hash(password)));
             if (user != null) {
                 HttpSession session = request.getSession(true);
-                session.setAttribute("user", user);
+                session.setAttribute(SessionAttributes.USER, user);
                 session.setMaxInactiveInterval(7 * 24 * 60 * 60); // 1 week
                 return new LoginResponse(user);
             } else
