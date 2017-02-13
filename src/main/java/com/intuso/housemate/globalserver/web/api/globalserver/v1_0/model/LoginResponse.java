@@ -5,37 +5,49 @@ package com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model;
  */
 public class LoginResponse {
 
-    private String error;
-    private User user;
+    private boolean validEmail;
+    private boolean knownEmail;
+    private boolean validPassword;
+    private boolean correctPassword;
 
     public LoginResponse() {}
 
-    public LoginResponse(String error) {
-        this.error = error;
+    public LoginResponse(boolean validEmail, boolean knownEmail, boolean validPassword, boolean correctPassword) {
+        this.validEmail = validEmail;
+        this.knownEmail = knownEmail;
+        this.validPassword = validPassword;
+        this.correctPassword = correctPassword;
     }
 
-    public LoginResponse(User user) {
-        this.user = user;
+    public boolean isValidEmail() {
+        return validEmail;
     }
 
-    public LoginResponse(String error, User user) {
-        this.error = error;
-        this.user = user;
+    public void setValidEmail(boolean validEmail) {
+        this.validEmail = validEmail;
     }
 
-    public String getError() {
-        return error;
+    public boolean isKnownEmail() {
+        return knownEmail;
     }
 
-    public void setError(String error) {
-        this.error = error;
+    public void setKnownEmail(boolean knownEmail) {
+        this.knownEmail = knownEmail;
     }
 
-    public User getUser() {
-        return user;
+    public boolean isValidPassword() {
+        return validPassword;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setValidPassword(boolean validPassword) {
+        this.validPassword = validPassword;
+    }
+
+    public boolean isCorrectPassword() {
+        return correctPassword;
+    }
+
+    public void setCorrectPassword(boolean correctPassword) {
+        this.correctPassword = correctPassword;
     }
 }

@@ -15,7 +15,9 @@ public interface Database {
     void updateUser(User user);
     User getUser(String id);
     void deleteUser(String id);
-    User authenticateUser(String email, String passwordHash);
+    User getUserByEmail(String email);
+    void setUserPassword(String id, String passwordHash);
+    boolean authenticateUser(String id, String passwordHash);
 
     Page<Client> getClientPage(long offset, int limit);
     void updateClient(Client client);

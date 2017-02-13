@@ -25,9 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.in;
+import static com.mongodb.client.model.Filters.*;
 
 /**
  * Created by tomc on 21/01/17.
@@ -178,11 +176,24 @@ public class MongoDatabaseImpl implements Database {
     }
 
     @Override
-    public User authenticateUser(String email, String passwordHash) {
+    public User getUserByEmail(String email) {
         return toUser.apply(userCollection.find(and(
-                eq("email", email),
-                eq("passwordHash", passwordHash)
+                eq("email", email)
         )).limit(1).first());
+    }
+
+    @Override
+    public void setUserPassword(String id, String passwordHash) {
+        userCache.invalidate(id);
+        userCollection.updateOne(eq("_id", id), new Document("$set", new Document("psaswordHash", passwordHash)), new UpdateOptions().upsert(true));
+    }
+
+    @Override
+    public boolean authenticateUser(String id, String passwordHash) {
+        return userCollection.count(and(
+                eq("_id", id),
+                eq("passwordHash", passwordHash)
+        )) > 0;
     }
 
     @Override

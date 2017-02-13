@@ -1,5 +1,7 @@
 package com.intuso.housemate.globalserver.web.security;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Token;
@@ -21,15 +23,23 @@ import java.net.URLEncoder;
  */
 public class SecurityFilter implements Filter {
 
-    public final static String OAUTH_TOKEN = "/api/oauth/1.0/token";
-
-    public final static String LOGIN_HTML = "/login/index.html";
-    public final static String LOGIN_JS = "/js/login.js";
-    public final static String LOGIN_1_0_ENDPOINT = "/api/globalserver/1.0/session/login";
-
+    private final static String LOGIN_HTML = "/login/index.html";
     public final static String NEXT_PARAM = "next";
-
     public final static String X_FORWARDED_FOR = "X-Forwarded-For";
+
+    private final static Multimap<String, String> UNSECURED_ENDPOINTS = HashMultimap.create();
+
+    static {
+        UNSECURED_ENDPOINTS.put("POST", "/api/oauth/1.0/token");
+
+        UNSECURED_ENDPOINTS.put("GET", LOGIN_HTML);
+        UNSECURED_ENDPOINTS.put("GET", "/js/login.bundle.js");
+        UNSECURED_ENDPOINTS.put("POST", "/api/globalserver/1.0/login");
+
+        UNSECURED_ENDPOINTS.put("GET", "/register/index.html");
+        UNSECURED_ENDPOINTS.put("GET", "/js/register.bundle.js");
+        UNSECURED_ENDPOINTS.put("POST", "/api/globalserver/1.0/register");
+    }
 
     private final Database database;
 
@@ -55,7 +65,7 @@ public class SecurityFilter implements Filter {
                 chain.doFilter(request, response);
             else if (isValidSession(httpRequest))
                 chain.doFilter(request, response);
-            else if (isPartOfAuthFlow(httpRequest))
+            else if (isUnsecured(httpRequest))
                 chain.doFilter(request, response);
 
             // not authorised to access the resource so redirect to login page
@@ -96,14 +106,8 @@ public class SecurityFilter implements Filter {
         return request.getSession(false) != null;
     }
 
-    private boolean isPartOfAuthFlow(HttpServletRequest request) {
-        return
-                (request.getMethod().equals("GET")
-                        && (request.getRequestURI().equals(LOGIN_HTML)
-                                || request.getRequestURI().equals(LOGIN_JS)))
-                || (request.getMethod().equals("POST")
-                        && (request.getRequestURI().equals(OAUTH_TOKEN)
-                                || request.getRequestURI().equals(LOGIN_1_0_ENDPOINT)));
+    private boolean isUnsecured(HttpServletRequest request) {
+        return UNSECURED_ENDPOINTS.containsEntry(request.getMethod(), request.getRequestURI());
     }
 
     private String getOriginalUrl(HttpServletRequest httpRequest) {

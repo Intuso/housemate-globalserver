@@ -20,6 +20,7 @@ public class InMemoryDatabase implements Database {
     private final ManagedCollection<Listener> listeners;
 
     private final TreeMap<String, User> users = Maps.newTreeMap();
+    private final Map<String, String> userPasswordHashes = Maps.newHashMap();
     private final TreeMap<String, Client> clients = Maps.newTreeMap();
     private final Map<String, Authorisation> authzGrants = Maps.newHashMap();
     private final Map<String, Token> tokens = Maps.newHashMap();
@@ -54,14 +55,25 @@ public class InMemoryDatabase implements Database {
     @Override
     public void deleteUser(String id) {
         users.remove(id);
+        userPasswordHashes.remove(id);
     }
 
     @Override
-    public User authenticateUser(String email, String passwordHash) {
+    public User getUserByEmail(String email) {
         for(User user : users.values())
             if(user.getEmail().equals(email))
-                return user; // todo check the password too.
+                return user;
         return null;
+    }
+
+    @Override
+    public void setUserPassword(String id, String passwordHash) {
+        userPasswordHashes.put(id, passwordHash);
+    }
+
+    @Override
+    public boolean authenticateUser(String id, String passwordHash) {
+        return userPasswordHashes.containsKey(id) && userPasswordHashes.get(id).equals(passwordHash);
     }
 
     @Override
