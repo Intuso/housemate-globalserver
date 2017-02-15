@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model;
+package com.intuso.housemate.globalserver.web.api.server.v1_0.model;
 
 /**
  * Created by tomc on 21/01/17.

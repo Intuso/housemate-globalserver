@@ -1,10 +1,12 @@
-package com.intuso.housemate.globalserver.web.api.globalserver.v1_0;
+package com.intuso.housemate.globalserver.web.api.server.v1_0;
 
+import com.intuso.housemate.client.v1_0.api.HousemateException;
 import com.intuso.housemate.globalserver.database.Database;
-import com.intuso.housemate.globalserver.database.model.User;
 import com.intuso.housemate.globalserver.web.SessionUtils;
-import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.LoginResponse;
-import com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model.RegisterResponse;
+import com.intuso.housemate.globalserver.web.api.server.v1_0.model.LoginResponse;
+import com.intuso.housemate.globalserver.web.api.server.v1_0.model.RegisterResponse;
+import com.intuso.housemate.globalserver.web.api.server.v1_0.model.UpdateUserResponse;
+import com.intuso.housemate.globalserver.web.api.server.v1_0.model.User;
 import com.intuso.housemate.globalserver.web.security.Hasher;
 
 import javax.inject.Inject;
@@ -38,7 +40,7 @@ public class SessionResource {
                                      @FormParam("password") String password,
                                      @Context HttpServletRequest request) throws IOException {
 
-        RegisterResponse response = new RegisterResponse(false, false, false, false);
+        RegisterResponse response = new RegisterResponse(false, true, false, false);
 
         // check the email and password are valid format
         if(email != null && email.length() > 0) // todo check format too?
@@ -55,7 +57,7 @@ public class SessionResource {
 
             // if there's not, create that user, and create them a session so they're logged in
             if(!response.isAlreadyRegistered()) {
-                user = new User(UUID.randomUUID().toString(), email, null);
+                user = new com.intuso.housemate.globalserver.database.model.User(UUID.randomUUID().toString(), email, null);
                 database.updateUser(user);
                 database.setUserPassword(user.getId(), hasher.hash(password));
                 HttpSession session = request.getSession(true);
@@ -64,6 +66,7 @@ public class SessionResource {
                 response.setSuccess(true);
             }
         }
+
         return response;
     }
 
@@ -102,6 +105,7 @@ public class SessionResource {
                 }
             }
         }
+
         return response;
     }
 
@@ -111,5 +115,54 @@ public class SessionResource {
         HttpSession session = request.getSession();
         if(session != null)
             session.invalidate();
+    }
+
+    @GET
+    @Path("/currentuser")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public User getCurrentUser(@Context HttpServletRequest request) {
+        return User.from(SessionUtils.getUser(request.getSession()));
+    }
+
+    @POST
+    @Path("/currentuser")
+    @Consumes("application/json")
+    public UpdateUserResponse saveCurrentUser(User user, @Context HttpServletRequest request) {
+
+        // check it's the correct user!
+        com.intuso.housemate.globalserver.database.model.User sessionUser = SessionUtils.getUser(request.getSession());
+        if (user.getId() != null && !user.getId().equals(sessionUser.getId()))
+            throw new HousemateException("The user id doesn't match the logged in user's id");
+
+        UpdateUserResponse response = new UpdateUserResponse(false, true, false);
+
+        // check the email and password are valid format
+        if(user.getEmail() != null && user.getEmail().length() > 0) // todo check format too?
+            response.setValidEmail(true);
+        if(user.getServerAddress() != null && user.getServerAddress().length() > 0)
+            response.setValidServerAddress(true);
+
+        // if so ....
+        if(response.isValidEmail() && response.isValidServerAddress()) {
+
+            // if the email to update is changed, check it's not already registered
+            if(!user.getEmail().equals(sessionUser.getEmail())) {
+                com.intuso.housemate.globalserver.database.model.User emailUser = database.getUserByEmail(user.getEmail());
+                response.setAlreadyRegistered(emailUser != null);
+            } else
+                response.setAlreadyRegistered(false);
+
+            // if we're all good, update the session user and save it
+            if(!response.isAlreadyRegistered()) {
+                if (user.getEmail() != null)
+                    sessionUser.setEmail(user.getEmail());
+                if (user.getServerAddress() != null)
+                    sessionUser.setServerAddress(user.getServerAddress());
+                database.updateUser(sessionUser);
+            }
+        }
+
+        return response;
     }
 }

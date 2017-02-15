@@ -34,11 +34,11 @@ public class SecurityFilter implements Filter {
 
         UNSECURED_ENDPOINTS.put("GET", LOGIN_HTML);
         UNSECURED_ENDPOINTS.put("GET", "/js/login.bundle.js");
-        UNSECURED_ENDPOINTS.put("POST", "/api/globalserver/1.0/login");
+        UNSECURED_ENDPOINTS.put("POST", "/api/server/1.0/login");
 
         UNSECURED_ENDPOINTS.put("GET", "/register/index.html");
         UNSECURED_ENDPOINTS.put("GET", "/js/register.bundle.js");
-        UNSECURED_ENDPOINTS.put("POST", "/api/globalserver/1.0/register");
+        UNSECURED_ENDPOINTS.put("POST", "/api/server/1.0/register");
     }
 
     private final Database database;

@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.web.api.globalserver.v1_0.model;
+package com.intuso.housemate.globalserver.web.api.server.v1_0.model;
 
 import java.util.List;
 import java.util.function.Function;
