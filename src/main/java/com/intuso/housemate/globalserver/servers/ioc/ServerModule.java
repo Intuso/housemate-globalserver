@@ -2,8 +2,8 @@ package com.intuso.housemate.globalserver.servers.ioc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.intuso.housemate.client.v1_0.proxy.simple.ioc.Server;
-import com.intuso.housemate.client.v1_0.proxy.simple.ioc.SimpleProxyModule;
+import com.intuso.housemate.client.v1_0.proxy.object.ioc.Server;
+import com.intuso.housemate.client.v1_0.proxy.object.ioc.SimpleProxyModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

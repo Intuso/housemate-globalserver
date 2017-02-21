@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.intuso.housemate.client.v1_0.proxy.simple.SimpleProxyServer;
+import com.intuso.housemate.client.v1_0.proxy.object.ProxyServer;
 import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.User;
@@ -26,7 +26,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
     private final Database database;
     private ManagedCollection.Registration listenerRegistration;
 
-    private final Map<String, SimpleProxyServer> servers = Maps.newHashMap();
+    private final Map<String, ProxyServer.SimpleProxyServer> servers = Maps.newHashMap();
 
     @Inject
     public Servers(Injector injector, Database database) {
@@ -34,7 +34,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
         this.database = database;
     }
 
-    public SimpleProxyServer getServer(String userId) {
+    public ProxyServer.SimpleProxyServer getServer(String userId) {
         return servers.get(userId);
     }
 
@@ -50,7 +50,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
             this.listenerRegistration.remove();
             listenerRegistration = null;
         }
-        for(SimpleProxyServer server : servers.values())
+        for(ProxyServer.SimpleProxyServer server : servers.values())
             server.stop();
         servers.clear();
     }
@@ -69,7 +69,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
         try {
             String serverAddress = user.getServerAddress();
             if (serverAddress != null) {
-                SimpleProxyServer server = injector.createChildInjector(new ServerModule(user.getId(), user.getServerAddress())).getInstance(SimpleProxyServer.class);
+                ProxyServer.SimpleProxyServer server = injector.createChildInjector(new ServerModule(user.getId(), user.getServerAddress())).getInstance(ProxyServer.SimpleProxyServer.class);
                 server.start();
                 servers.put(user.getId(), server);
             }
