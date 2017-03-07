@@ -26,7 +26,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
     private final Database database;
     private ManagedCollection.Registration listenerRegistration;
 
-    private final Map<String, ProxyServer.SimpleProxyServer> servers = Maps.newHashMap();
+    private final Map<String, ProxyServer.Simple> servers = Maps.newHashMap();
 
     @Inject
     public Servers(Injector injector, Database database) {
@@ -34,7 +34,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
         this.database = database;
     }
 
-    public ProxyServer.SimpleProxyServer getServer(String userId) {
+    public ProxyServer.Simple getServer(String userId) {
         return servers.get(userId);
     }
 
@@ -50,7 +50,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
             this.listenerRegistration.remove();
             listenerRegistration = null;
         }
-        for(ProxyServer.SimpleProxyServer server : servers.values())
+        for(ProxyServer.Simple server : servers.values())
             server.stop();
         servers.clear();
     }
@@ -69,7 +69,7 @@ public class Servers extends AbstractIdleService implements Database.Listener {
         try {
             String serverAddress = user.getServerAddress();
             if (serverAddress != null) {
-                ProxyServer.SimpleProxyServer server = injector.createChildInjector(new ServerModule(user.getId(), user.getServerAddress())).getInstance(ProxyServer.SimpleProxyServer.class);
+                ProxyServer.Simple server = injector.createChildInjector(new ServerModule(user.getId(), user.getServerAddress())).getInstance(ProxyServer.Simple.class);
                 server.start();
                 servers.put(user.getId(), server);
             }

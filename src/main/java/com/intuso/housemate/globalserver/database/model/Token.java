@@ -5,16 +5,27 @@ package com.intuso.housemate.globalserver.database.model;
  */
 public class Token {
 
+    private String id;
     private Client client;
     private User user;
     private String token;
+    private String refreshToken;
+    private long expiresAt;
 
     public Token() {}
 
-    public Token(Client client, User user, String token) {
+    public Token(String id, Client client, User user, String token, String refreshToken, long expiresAt) {
         this.client = client;
         this.user = user;
         this.token = token;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Client getClient() {
@@ -39,5 +50,21 @@ public class Token {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public long getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(long expiresAt) {
+        this.expiresAt = expiresAt;
     }
 }

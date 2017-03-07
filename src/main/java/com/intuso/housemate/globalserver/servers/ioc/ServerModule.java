@@ -2,6 +2,7 @@ package com.intuso.housemate.globalserver.servers.ioc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.intuso.housemate.client.v1_0.messaging.jms.ioc.JMSMessagingModule;
 import com.intuso.housemate.client.v1_0.proxy.object.ioc.Server;
 import com.intuso.housemate.client.v1_0.proxy.object.ioc.SimpleProxyModule;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class ServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new SimpleProxyModule());
+        install(new JMSMessagingModule.Javabin());
         bind(String.class).annotatedWith(ServerAddress.class).toInstance(address);
         bind(Connection.class).toProvider(ConnectionProvider.class);
     }

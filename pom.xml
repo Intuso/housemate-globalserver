@@ -65,6 +65,11 @@
             <version>${intuso.housemate.client.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.intuso.housemate</groupId>
+            <artifactId>housemate-client-1-0-messaging-jms</artifactId>
+            <version>${intuso.housemate.client.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
         </dependency>

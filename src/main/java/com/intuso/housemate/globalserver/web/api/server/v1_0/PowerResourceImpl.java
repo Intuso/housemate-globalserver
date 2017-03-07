@@ -31,19 +31,19 @@ public class PowerResourceImpl implements PowerResource {
 
     private final Servers servers;
 
-    private final Command.PerformListener<ProxyCommand.SimpleProxyCommand> loggerListener = new Command.PerformListener<ProxyCommand.SimpleProxyCommand>() {
+    private final Command.PerformListener<ProxyCommand.Simple> loggerListener = new Command.PerformListener<ProxyCommand.Simple>() {
         @Override
-        public void commandStarted(ProxyCommand.SimpleProxyCommand command) {
+        public void commandStarted(ProxyCommand.Simple command) {
             logger.debug("Started perform of {}", command);
         }
 
         @Override
-        public void commandFinished(ProxyCommand.SimpleProxyCommand command) {
+        public void commandFinished(ProxyCommand.Simple command) {
             logger.debug("Finished perform of {}", command);
         }
 
         @Override
-        public void commandFailed(ProxyCommand.SimpleProxyCommand command, String error) {
+        public void commandFailed(ProxyCommand.Simple command, String error) {
             logger.debug("Failed perform of {} because {}", command, error);
         }
     };
@@ -59,9 +59,9 @@ public class PowerResourceImpl implements PowerResource {
     @Override
     public Page<Device.Data> list(int offset, int limit) {
         List<Device.Data> devices = Lists.newArrayList();
-        for(ProxyNode.SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
-            for(ProxyHardware.SimpleProxyHardware hardware : node.getHardwares())
-                for(ProxyDevice.SimpleProxyDevice device : hardware.getDevices())
+        for(ProxyNode.Simple node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
+            for(ProxyHardware.Simple hardware : node.getHardwares())
+                for(ProxyDevice.Simple device : hardware.getDevices())
                   devices.add(new Device.Data(device.getId(), device.getName(), device.getDescription()));
 
         Stream<Device.Data> stream  = devices.stream();
@@ -74,9 +74,9 @@ public class PowerResourceImpl implements PowerResource {
 
     @Override
     public boolean isOn(String id) {
-        for(ProxyNode.SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
-            for(ProxyHardware.SimpleProxyHardware hardware : node.getHardwares())
-                for(ProxyDevice.SimpleProxyDevice device : hardware.getDevices())
+        for(ProxyNode.Simple node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
+            for(ProxyHardware.Simple hardware : node.getHardwares())
+                for(ProxyDevice.Simple device : hardware.getDevices())
                     if(device.getId().equals(id))
                         return BooleanSerialiser.INSTANCE.deserialise(device.getValues().get("on").getValue().getElements().get(0));
         return false;
@@ -85,9 +85,9 @@ public class PowerResourceImpl implements PowerResource {
     @Override
     public void turnOn(String id) {
         logger.debug("Turning on {}", id);
-        for(ProxyNode.SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes()) {
-            for(ProxyHardware.SimpleProxyHardware hardware : node.getHardwares()) {
-                for(ProxyDevice.SimpleProxyDevice device : hardware.getDevices()) {
+        for(ProxyNode.Simple node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes()) {
+            for(ProxyHardware.Simple hardware : node.getHardwares()) {
+                for(ProxyDevice.Simple device : hardware.getDevices()) {
                     if (device.getId().equals(id)) {
                         device.getCommands().get("on").perform(loggerListener);
                         return;
@@ -100,9 +100,9 @@ public class PowerResourceImpl implements PowerResource {
     @Override
     public void turnOff(String id) {
         logger.debug("Turning off {}", id);
-        for(ProxyNode.SimpleProxyNode node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes()) {
-            for(ProxyHardware.SimpleProxyHardware hardware : node.getHardwares()) {
-                for(ProxyDevice.SimpleProxyDevice device : hardware.getDevices()) {
+        for(ProxyNode.Simple node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes()) {
+            for(ProxyHardware.Simple hardware : node.getHardwares()) {
+                for(ProxyDevice.Simple device : hardware.getDevices()) {
                     if (device.getId().equals(id)) {
                         device.getCommands().get("off").perform(loggerListener);
                         return;

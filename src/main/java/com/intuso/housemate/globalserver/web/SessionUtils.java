@@ -14,18 +14,20 @@ public class SessionUtils {
     public final static String CLIENT = "client";
 
     public static User getUser(HttpSession session) {
-        return (User) session.getAttribute(USER);
+        return session != null ? (User) session.getAttribute(USER) : null;
     }
 
     public static void setUser(HttpSession session, User user) {
-        session.setAttribute(USER, user);
+        if(session != null)
+            session.setAttribute(USER, user);
     }
 
     public static Client getClient(HttpSession session) {
-        return (Client) session.getAttribute(CLIENT);
+        return session != null ? (Client) session.getAttribute(CLIENT) : null;
     }
 
     public static void setClient(HttpSession session, Client client) {
-        session.setAttribute(CLIENT, client);
+        if(session != null)
+            session.setAttribute(CLIENT, client);
     }
 }

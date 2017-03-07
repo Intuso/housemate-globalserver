@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 /**
  * Created by tomc on 21/01/17.
  */
-public class InMemoryDatabase implements Database {
+public  class InMemoryDatabase implements Database {
 
     private final ManagedCollection<Listener> listeners;
 
@@ -115,17 +115,33 @@ public class InMemoryDatabase implements Database {
 
     @Override
     public void updateToken(Token token) {
-        tokens.put(token.getToken(), token);
+        tokens.put(token.getId(), token);
     }
 
     @Override
-    public Token getToken(String token) {
-        return tokens.get(token);
+    public Token getToken(String id) {
+        return tokens.get(id);
     }
 
     @Override
     public void deleteToken(String token) {
         tokens.remove(token);
+    }
+
+    @Override
+    public Token getTokenForToken(String token) {
+        for(Token t : tokens.values())
+            if(t.getToken().equals(token))
+                return t;
+        return null;
+    }
+
+    @Override
+    public Token getTokenForRefreshToken(String refreshToken) {
+        for(Token token : tokens.values())
+            if(token.getRefreshToken().equals(refreshToken))
+                return token;
+        return null;
     }
 
     @Override

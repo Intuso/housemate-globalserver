@@ -5,6 +5,7 @@ import com.intuso.housemate.globalserver.database.model.Authorisation;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.Token;
 import com.intuso.housemate.globalserver.database.model.User;
+import com.intuso.housemate.globalserver.web.SessionUtils;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuer;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
@@ -17,6 +18,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
+import org.apache.oltu.oauth2.common.message.types.TokenType;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -27,12 +29,15 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 
 /**
  * Created by tomc on 21/01/17.
  */
 @Path("/")
 public class OAuthResource {
+
+    private final static long TOKEN_LIFETIME = 24 * 60 * 60 * 1000; // 1 day
 
     private final Database database;
 
@@ -49,9 +54,9 @@ public class OAuthResource {
             OAuthAuthzRequest oauthRequest = new OAuthAuthzRequest(request);
             OAuthIssuerImpl oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
 
-            User user = database.getUser("294c7ff2-6dbd-4522-8f69-a94b6332cb73");
+            User user = SessionUtils.getUser(request.getSession(false));
             if(user == null)
-                return buildBadRequestResponse("Could not find user: 294c7ff2-6dbd-4522-8f69-a94b6332cb73");
+                return buildBadRequestResponse("Could not find user in session");
             Client client = database.getClient(oauthRequest.getClientId());
             if(client == null)
                 return buildBadRequestResponse("Could not find client: " + oauthRequest.getClientId());
@@ -74,13 +79,7 @@ public class OAuthResource {
                     .location(new URI(response.getLocationUri()))
                     .build();
         } catch (OAuthProblemException e) {
-            OAuthResponse res = OAuthASResponse
-                    .errorResponse(HttpServletResponse.SC_BAD_REQUEST)
-                    .error(e)
-                    .buildJSONMessage();
-            return Response
-                    .status(res.getResponseStatus()).entity(res.getBody())
-                    .build();
+            return buildBadOAuthRequestResponse(e);
         }
     }
 
@@ -89,46 +88,121 @@ public class OAuthResource {
     @Consumes("application/x-www-form-urlencoded")
     @Produces("application/json")
     public Response token(@Context HttpServletRequest request, MultivaluedMap<String, String> form) throws OAuthSystemException {
-        try {
-            OAuthTokenRequest oauthRequest = new OAuthTokenRequest(new OAuthRequestWrapper(request, form));
-            OAuthIssuer oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
 
-            // do checking for different grant types
-            if (oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE).equals(GrantType.AUTHORIZATION_CODE.toString())) {
-                Authorisation authorisation = database.getAuthorisation(oauthRequest.getParam(OAuth.OAUTH_CODE));
+        // Attempt to build an OAuth request from the HTTP request.
+        OAuthTokenRequest oauthRequest;
+        try {
+            oauthRequest = new OAuthTokenRequest(request);
+
+        // If the HTTP request was not a valid OAuth token request, then we
+        // have no other choice but to reject it as a bad request.
+        } catch(OAuthProblemException e) {
+            // Build the OAuth response.
+            return buildBadOAuthRequestResponse(e);
+        }
+
+        // Attempt to get the client.
+        Client client = database.getClient(oauthRequest.getClientId());
+        // If the client is unknown, respond as such.
+        if(client == null)
+            return buildBadRequestResponse("Unknown client for id " + oauthRequest.getClientId());
+
+        // Get the client secret and check it's correct
+        String clientSecret = oauthRequest.getClientSecret();
+        if(clientSecret == null)
+            return buildBadRequestResponse("The client secret is required.");
+        // Make sure the client gave the right secret.
+        else if(!clientSecret.equals(client.getSecret()))
+            return buildBadRequestResponse("The client secret is incorrect.");
+
+        OAuthIssuer oauthIssuerImpl = new OAuthIssuerImpl(new MD5Generator());
+
+        GrantType grantType;
+        try {
+            grantType = GrantType.valueOf(oauthRequest.getGrantType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return buildBadRequestResponse("Unknown grant type " + oauthRequest.getGrantType());
+        }
+
+        Token token;
+        switch (grantType) {
+            case AUTHORIZATION_CODE:
+
+                // Get the authorization code from the request.
+                Authorisation authorisation = database.getAuthorisation(oauthRequest.getCode());
                 if (authorisation == null)
                     return buildBadRequestResponse("Unknown auth code: " + oauthRequest.getParam(OAuth.OAUTH_CODE));
-                else {
-                    String tokenString = oauthIssuerImpl.accessToken();
-                    // todo get the user the token is for
-                    Token token = new Token(authorisation.getClient(), authorisation.getUser(), tokenString);
-                    database.updateToken(token);
 
-                    OAuthResponse response = OAuthASResponse
-                            .tokenResponse(HttpServletResponse.SC_OK)
-                            .setAccessToken(tokenString)
-                            .setExpiresIn("3600")
-                            .buildJSONMessage();
+                // check the client is the same
+                if(!authorisation.getClient().getId().equals(client.getId()))
+                    return buildBadRequestResponse("OAuth Client does not match the client for the authorization code");
 
-                    database.deleteAuthorisation(authorisation.getCode());
+                token = new Token(
+                        UUID.randomUUID().toString(),
+                        authorisation.getClient(),
+                        authorisation.getUser(),
+                        oauthIssuerImpl.accessToken(),
+                        oauthIssuerImpl.refreshToken(),
+                        System.currentTimeMillis() + TOKEN_LIFETIME); // + 1 day
+                database.deleteAuthorisation(authorisation.getCode());
 
-                    return Response.status(response.getResponseStatus())
-                            .entity(response.getBody()).build();
-                }
-            } else
-                // refresh token is not supported in this implementation
-                return buildBadRequestResponse("Unknown grant type: " + oauthRequest.getParam(OAuth.OAUTH_GRANT_TYPE));
+                // todo
+                // check the authorization code hasn't expired
+//              if(System.currentTimeMillis() > authorisation.getExpirationTime())
+//                    return buildBadRequestResponse("Authorization code has expired");
 
-        } catch (OAuthProblemException e) {
-            OAuthResponse res = OAuthASResponse
-                    .errorResponse(HttpServletResponse.SC_BAD_REQUEST)
-                    .error(e)
-                    .buildJSONMessage();
-            return Response
-                    .status(res.getResponseStatus())
-                    .entity(res.getBody())
-                    .build();
+                // todo
+                // check the authorization code has been granted by a user
+//              if(authorisation.getUser() == null)
+//                    return buildBadRequestResponse("Authorization code has not been granted by a user");
+                break;
+            case REFRESH_TOKEN:
+
+                // Get the refresh token from the request.
+                String refreshToken = oauthRequest.getRefreshToken();
+                if(refreshToken == null)
+                    return buildBadRequestResponse("Missing refresh token");
+
+                // get the token for the refresh token
+                token = database.getTokenForRefreshToken(refreshToken);
+                if(token == null)
+                    return buildBadRequestResponse("Could not find token for refresh token");
+
+                if(!token.getClient().getId().equals(oauthRequest.getClientId()))
+                    return buildBadRequestResponse("Current client does not match the one in the token");
+
+                token.setToken(oauthIssuerImpl.accessToken());
+                token.setRefreshToken(oauthIssuerImpl.refreshToken());
+                token.setExpiresAt(System.currentTimeMillis() + TOKEN_LIFETIME);
+                database.updateToken(token);
+
+                break;
+            default:
+                return buildBadRequestResponse("Unknown grant type " + oauthRequest.getGrantType());
         }
+
+        database.updateToken(token);
+
+        OAuthResponse oAuthResponse = OAuthASResponse
+                        .tokenResponse(HttpServletResponse.SC_OK)
+                        .setAccessToken(token.getToken())
+                        .setExpiresIn(Long.toString(token.getExpiresAt() / 1000))
+                        .setRefreshToken(token.getRefreshToken())
+                        .setTokenType(TokenType.BEARER.toString())
+                        .buildJSONMessage();
+
+        return Response.status(oAuthResponse.getResponseStatus())
+                .entity(oAuthResponse.getBody()).build();
+    }
+
+    private Response buildBadOAuthRequestResponse(OAuthProblemException e) throws OAuthSystemException {
+        OAuthResponse res = OAuthASResponse
+                .errorResponse(HttpServletResponse.SC_BAD_REQUEST)
+                .error(e)
+                .buildJSONMessage();
+        return Response
+                .status(res.getResponseStatus()).entity(res.getBody())
+                .build();
     }
 
     private Response buildBadRequestResponse(String message) {

@@ -74,6 +74,8 @@ public class MongoDatabaseImpl implements Database {
         tokenCollection = database.getCollection("token");
         tokenCollection.createIndex(new Document().append("client", 1));
         tokenCollection.createIndex(new Document().append("user", 1));
+        tokenCollection.createIndex(new Document().append("token", 1));
+        tokenCollection.createIndex(new Document().append("refresh", 1));
 
         userCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(7, TimeUnit.DAYS)
@@ -115,30 +117,46 @@ public class MongoDatabaseImpl implements Database {
                     }
                 });
 
-        toUser = document -> document == null ? null : new User(document.getString("_id"), document.getString("email"), document.getString("server"));
-        fromUser = user -> user == null ? null : new Document().append("_id", user.getId())
+        toUser = document -> document == null ? null : new User(
+                document.getString("_id"),
+                document.getString("email"),
+                document.getString("server"));
+        fromUser = user -> user == null ? null : new Document()
+                .append("_id", user.getId())
                 .append("email", user.getEmail())
                 .append("server", user.getServerAddress());
-        toClient = document -> document == null ? null : new Client(userCache.getUnchecked(document.getString("owner")).orElse(null),
+        toClient = document -> document == null ? null : new Client(
+                userCache.getUnchecked(document.getString("owner")).orElse(null),
                 document.getString("_id"),
                 document.getString("secret"),
                 document.getString("name"));
-        fromClient = client -> client == null ? null : new Document().append("owner", client.getOwner().getId())
+        fromClient = client -> client == null ? null : new Document()
                 .append("_id", client.getId())
                 .append("secret", client.getSecret())
+                .append("owner", client.getOwner().getId())
                 .append("name", client.getName());
-        toAuthorisation = document -> document == null ? null : new Authorisation(clientCache.getUnchecked(document.getString("client")).orElse(null),
+        toAuthorisation = document -> document == null ? null : new Authorisation(
+                clientCache.getUnchecked(document.getString("client")).orElse(null),
                 userCache.getUnchecked(document.getString("user")).orElse(null),
                 document.getString("_id"));
-        fromAuthorisation = authorisation -> authorisation == null ? null : new Document().append("client", authorisation.getClient().getId())
+        fromAuthorisation = authorisation -> authorisation == null ? null : new Document()
+                .append("client", authorisation.getClient().getId())
                 .append("user", authorisation.getUser().getId())
                 .append("_id", authorisation.getCode());
-        toToken = document -> document == null ? null : new Token(clientCache.getUnchecked(document.getString("client")).orElse(null),
+        toToken = document -> document == null ? null : new Token(
+                document.getString("_id"),
+                clientCache.getUnchecked(document.getString("client")).orElse(null),
                 userCache.getUnchecked(document.getString("user")).orElse(null),
-                document.getString("_id"));
-        fromToken = token -> token == null ? null : new Document().append("client", token.getClient().getId())
+                document.getString("token"),
+                document.getString("token"),
+                document.getLong("expires-at"));
+        fromToken = token -> token == null ? null : new Document()
+                .append("_id", token.getId())
+                .append("client", token.getClient().getId())
                 .append("user", token.getUser().getId())
-                .append("_id", token.getToken());
+                .append("token", token.getToken())
+                .append("refresh", token.getRefreshToken())
+                .append("expires-at", token.getExpiresAt());
     }
 
     @Override
@@ -241,17 +259,27 @@ public class MongoDatabaseImpl implements Database {
 
     @Override
     public void updateToken(Token token) {
-        tokenCollection.updateOne(eq("_id", token.getToken()), new Document("$set", fromToken.apply(token)), new UpdateOptions().upsert(true));
+        tokenCollection.updateOne(eq("_id", token.getId()), new Document("$set", fromToken.apply(token)), new UpdateOptions().upsert(true));
     }
 
     @Override
-    public Token getToken(String token) {
-        return toToken.apply(tokenCollection.find(eq("_id", token)).first());
+    public Token getToken(String id) {
+        return toToken.apply(tokenCollection.find(eq("_id", id)).first());
     }
 
     @Override
     public void deleteToken(String token) {
         tokenCollection.deleteOne(eq("_id", token));
+    }
+
+    @Override
+    public Token getTokenForToken(String token) {
+        return toToken.apply(tokenCollection.find(eq("token", token)).first());
+    }
+
+    @Override
+    public Token getTokenForRefreshToken(String refreshToken) {
+        return toToken.apply(tokenCollection.find(eq("refresh", refreshToken)).first());
     }
 
     @Override

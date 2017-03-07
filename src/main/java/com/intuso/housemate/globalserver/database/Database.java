@@ -29,8 +29,10 @@ public interface Database {
     void deleteAuthorisation(String code);
 
     void updateToken(Token token);
-    Token getToken(String token);
+    Token getToken(String id);
     void deleteToken(String token);
+    Token getTokenForToken(String refreshToken);
+    Token getTokenForRefreshToken(String refreshToken);
     Page<Token> getUserTokenPage(String id, long offset, int limit);
     Page<Token> getClientTokenPage(String id, long offset, int limit);
 
