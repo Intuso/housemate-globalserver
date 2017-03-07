@@ -10,6 +10,8 @@ import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ParameterStyle;
 import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +24,8 @@ import java.net.URLEncoder;
  * Created by tomc on 21/01/17.
  */
 public class SecurityFilter implements Filter {
+
+    private final static Logger logger = LoggerFactory.getLogger(SecurityFilter.class);
 
     private final static String LOGIN_HTML = "/login/index.html";
     public final static String NEXT_PARAM = "next";
@@ -61,11 +65,11 @@ public class SecurityFilter implements Filter {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-            if (isValidOAuthRequest(httpRequest))
+            if (isOAuthRequest(httpRequest)) {
+                handleOAuthRequest(httpRequest, httpResponse, chain);
+            } else if (isValidSession(httpRequest))
                 chain.doFilter(request, response);
-            else if (isValidSession(httpRequest))
-                chain.doFilter(request, response);
-            else if (isUnsecured(httpRequest))
+            else if (isUnsecuredEndpoint(httpRequest))
                 chain.doFilter(request, response);
 
             // not authorised to access the resource so redirect to login page
@@ -78,7 +82,17 @@ public class SecurityFilter implements Filter {
         // not an http request, just ignore it
     }
 
-    private boolean isValidOAuthRequest(HttpServletRequest request) {
+    private boolean isOAuthRequest(HttpServletRequest request) {
+        try {
+            // If we can make a valid OAuth Request out of this request, then we should treat this as an oauth request
+            new OAuthAccessResourceRequest(request, ParameterStyle.HEADER);
+            return true;
+        } catch (OAuthSystemException | OAuthProblemException e) {
+            return false;
+        }
+    }
+
+    private void handleOAuthRequest(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         try {
 
             // Make the OAuth Request out of this request
@@ -86,19 +100,34 @@ public class SecurityFilter implements Filter {
 
             // Get the access token
             String tokenString = oauthRequest.getAccessToken();
+            if(tokenString == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No OAuth access token in request");
+                return;
+            }
 
             // get the token object
             Token token = database.getToken(tokenString);
-
-            if(token != null) {
-                HttpSession session = request.getSession(true);
-                SessionUtils.setUser(session, token.getUser());
-                SessionUtils.setClient(session, token.getClient());
+            if(token == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown access token" + tokenString);
+                return;
             }
-            return token != null;
+
+            // validate the token
+            if(token.getExpiresAt() < System.currentTimeMillis()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token has expired");
+                return;
+            }
+
+            // put the details in the session
+            HttpSession session = request.getSession(true);
+            SessionUtils.setUser(session, token.getUser());
+            SessionUtils.setClient(session, token.getClient());
+
+            chain.doFilter(request, response);
 
         } catch (OAuthSystemException | OAuthProblemException e) {
-            return false;
+            logger.error("Unexpected problem processing OAuth request", e);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unexpected problem processing OAuth request: " + e.getMessage());
         }
     }
 
@@ -106,7 +135,7 @@ public class SecurityFilter implements Filter {
         return request.getSession(false) != null;
     }
 
-    private boolean isUnsecured(HttpServletRequest request) {
+    private boolean isUnsecuredEndpoint(HttpServletRequest request) {
         return UNSECURED_ENDPOINTS.containsEntry(request.getMethod(), request.getRequestURI());
     }
 
