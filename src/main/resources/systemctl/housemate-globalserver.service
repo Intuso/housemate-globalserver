@@ -1,0 +1,9 @@
+[Unit]
+Description=Intuso Housemate Globalserver
+
+[Service]
+User=hm
+ExecStart=/usr/bin/java -jar /usr/share/intuso/housemate/housemate-globalserver-${project.version}-jar-with-dependencies.jar -conf.dir /etc/intuso/housemate/globalserver
+
+[Install]
+WantedBy=multi-user.target
