@@ -1,12 +1,13 @@
 package com.intuso.housemate.globalserver.database.mongo;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.intuso.housemate.globalserver.database.model.Authorisation;
 import com.intuso.housemate.globalserver.database.model.Client;
 import com.intuso.housemate.globalserver.database.model.Token;
 import com.intuso.housemate.globalserver.database.model.User;
-import com.intuso.utilities.collection.ManagedCollection;
+import com.intuso.housemate.globalserver.ioc.ManagedCollectionFactoryImpl;
 import com.intuso.utilities.collection.ManagedCollectionFactory;
+import com.intuso.utilities.properties.api.WriteableMapPropertyRepository;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -19,12 +20,8 @@ import static org.junit.Assert.*;
 @Ignore // more of an integration test. Needs mongo running
 public class TestMongoDatabase {
 
-    private final MongoDatabaseImpl mongoDatabase = new MongoDatabaseImpl(new ManagedCollectionFactory() {
-        @Override
-        public <LISTENER> ManagedCollection<LISTENER> create() {
-            return new ManagedCollection<>(Lists.newArrayList());
-        }
-    });
+    private final ManagedCollectionFactory managedCollectionFactory = new ManagedCollectionFactoryImpl();
+    private final MongoDatabaseImpl mongoDatabase = new MongoDatabaseImpl(new WriteableMapPropertyRepository(managedCollectionFactory, Maps.newHashMap()), managedCollectionFactory);
 
     @After
     public void cleanup() {
