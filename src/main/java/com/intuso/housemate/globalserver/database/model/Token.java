@@ -15,9 +15,12 @@ public class Token {
     public Token() {}
 
     public Token(String id, Client client, User user, String token, String refreshToken, long expiresAt) {
+        this.id = id;
         this.client = client;
         this.user = user;
         this.token = token;
+        this.refreshToken = refreshToken;
+        this.expiresAt = expiresAt;
     }
 
     public String getId() {
