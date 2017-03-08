@@ -92,7 +92,7 @@ public class OAuthResource {
         // Attempt to build an OAuth request from the HTTP request.
         OAuthTokenRequest oauthRequest;
         try {
-            oauthRequest = new OAuthTokenRequest(request);
+            oauthRequest = new OAuthTokenRequest(new OAuthRequestWrapper(request, form));
 
         // If the HTTP request was not a valid OAuth token request, then we
         // have no other choice but to reject it as a bad request.
