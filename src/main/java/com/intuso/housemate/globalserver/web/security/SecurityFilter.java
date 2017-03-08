@@ -106,7 +106,7 @@ public class SecurityFilter implements Filter {
             }
 
             // get the token object
-            Token token = database.getToken(tokenString);
+            Token token = database.getTokenForToken(tokenString);
             if(token == null) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown access token" + tokenString);
                 return;
