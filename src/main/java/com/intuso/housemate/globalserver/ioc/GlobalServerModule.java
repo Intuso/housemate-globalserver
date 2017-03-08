@@ -9,6 +9,8 @@ import com.google.inject.multibindings.Multibinder;
 import com.intuso.housemate.globalserver.servers.ioc.ServersModule;
 import com.intuso.housemate.globalserver.web.ioc.WebModule;
 import com.intuso.utilities.collection.ManagedCollectionFactory;
+import com.intuso.utilities.properties.api.PropertyRepository;
+import com.intuso.utilities.properties.api.WriteableMapPropertyRepository;
 import com.intuso.utilities.webserver.config.HttpPortConfig;
 import com.intuso.utilities.webserver.ioc.WebServerModule;
 
@@ -19,8 +21,20 @@ import java.util.Set;
  */
 public class GlobalServerModule extends AbstractModule {
 
+    public static void configureDefaults(WriteableMapPropertyRepository defaultProperties) {
+        // todo, eg webserver port
+    }
+
+    private final PropertyRepository properties;
+
+    public GlobalServerModule(PropertyRepository properties) {
+        this.properties = properties;
+    }
+
     @Override
     protected void configure() {
+
+        bind(PropertyRepository.class).toInstance(properties);
 
         install(new WebServerModule(new HttpPortConfig("0.0.0.0", 8090)));
         install(new WebModule());

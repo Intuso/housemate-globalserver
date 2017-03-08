@@ -9,6 +9,8 @@ import com.intuso.housemate.globalserver.database.Database;
 import com.intuso.housemate.globalserver.database.model.*;
 import com.intuso.utilities.collection.ManagedCollection;
 import com.intuso.utilities.collection.ManagedCollectionFactory;
+import com.intuso.utilities.properties.api.PropertyRepository;
+import com.intuso.utilities.properties.api.WriteableMapPropertyRepository;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -32,6 +34,16 @@ import static com.mongodb.client.model.Filters.*;
  */
 public class MongoDatabaseImpl implements Database {
 
+    public final static String HOST = "mongo.host";
+    public final static String PORT = "mongo.port";
+    public final static String DATABASE = "mongo.database";
+
+    public static void configureDefaults(WriteableMapPropertyRepository defaultProperties) {
+        defaultProperties.set(HOST, "localhost");
+        defaultProperties.set(PORT, "27017");
+        defaultProperties.set(DATABASE, "housemate");
+    }
+
     private final Logger logger = LoggerFactory.getLogger(MongoDatabaseImpl.class);
 
     private final ManagedCollection<Listener> listeners;
@@ -54,15 +66,15 @@ public class MongoDatabaseImpl implements Database {
     private final Function<Token, Document> fromToken;
 
     @Inject
-    public MongoDatabaseImpl(ManagedCollectionFactory managedCollectionFactory) {
+    public MongoDatabaseImpl(PropertyRepository properties, ManagedCollectionFactory managedCollectionFactory) {
 
         listeners = managedCollectionFactory.create();
 
-        MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
+        MongoClient mongoClient = new MongoClient(properties.get(HOST), Integer.parseInt(properties.get(PORT)));
 
         logger.info("Connecting to mongod at " + mongoClient.getConnectPoint());
 
-        MongoDatabase database = mongoClient.getDatabase("housemate");
+        MongoDatabase database = mongoClient.getDatabase(properties.get(DATABASE));
 
         logger.info("Using database " + database.getName());
 
