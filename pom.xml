@@ -213,14 +213,13 @@
                                     </mapper>
                                 </data>
 
-                                <!-- Lib dir for storing eg broker messages -->
+                                <!-- Web interface -->
                                 <data>
-                                    <type>template</type>
-                                    <paths>
-                                        <path>/var/lib/intuso</path>
-                                    </paths>
+                                    <src>../housemate-frontend/build</src>
+                                    <type>directory</type>
                                     <mapper>
                                         <type>perm</type>
+                                        <prefix>/var/www/intuso/housemate/globalserver</prefix>
                                         <user>hm</user>
                                         <group>nogroup</group>
                                         <filemode>755</filemode>
