@@ -23,6 +23,7 @@ public class GlobalServerModule extends AbstractModule {
 
     public static void configureDefaults(WriteableMapPropertyRepository defaultProperties) {
         // todo, eg webserver port
+        WebModule.configureDefaults(defaultProperties);
     }
 
     private final PropertyRepository properties;
