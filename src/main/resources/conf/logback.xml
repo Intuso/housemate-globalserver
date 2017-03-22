@@ -23,6 +23,9 @@
     <logger name="org.apache.jasper" level="WARN" />
     <logger name="org.apache.tomcat" level="WARN" />
     <logger name="org.eclipse.jetty" level="WARN" />
+    <logger name="org.mongodb" level="WARN" />
+
+    <logger name="com.intuso.housemate.globalserver" level="DEBUG" />
 
     <root level="INFO">
         <appender-ref ref="MAIN-LOG"/>
