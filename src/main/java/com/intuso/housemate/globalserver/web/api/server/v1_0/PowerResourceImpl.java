@@ -58,6 +58,7 @@ public class PowerResourceImpl implements PowerResource {
 
     @Override
     public Page<Device.Data> list(int offset, int limit) {
+        logger.debug("Listing devices {} to {}", offset, limit);
         List<Device.Data> devices = Lists.newArrayList();
         for(ProxyNode.Simple node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
             for(ProxyHardware.Simple hardware : node.getHardwares())
@@ -74,6 +75,7 @@ public class PowerResourceImpl implements PowerResource {
 
     @Override
     public boolean isOn(String id) {
+        logger.debug("Is on {}", id);
         for(ProxyNode.Simple node : servers.getServer(SessionUtils.getUser(request.getSession()).getId()).getNodes())
             for(ProxyHardware.Simple hardware : node.getHardwares())
                 for(ProxyDevice.Simple device : hardware.getDevices())
