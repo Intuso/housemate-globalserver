@@ -19,6 +19,8 @@ import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.apache.oltu.oauth2.common.message.types.TokenType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +39,8 @@ import java.util.UUID;
 @Path("/")
 public class OAuthResource {
 
+    private final static Logger logger = LoggerFactory.getLogger(OAuthResource.class);
+
     private final static long TOKEN_LIFETIME = 24 * 60 * 60 * 1000; // 1 day
 
     private final Database database;
@@ -49,6 +53,9 @@ public class OAuthResource {
     @GET
     @Path("/authz")
     public Response authorize(@Context HttpServletRequest request) throws URISyntaxException, OAuthSystemException {
+
+        logger.debug("Authz request received");
+
         try {
 
             OAuthAuthzRequest oauthRequest = new OAuthAuthzRequest(request);
@@ -75,10 +82,14 @@ public class OAuthResource {
 
             String redirectURI = oauthRequest.getParam(OAuth.OAUTH_REDIRECT_URI);
             final OAuthResponse response = builder.location(redirectURI).buildQueryMessage();
+
+            logger.debug("Authz request for client {} granted for user {}", client.getId(), user.getId());
+
             return Response.status(response.getResponseStatus())
                     .location(new URI(response.getLocationUri()))
                     .build();
         } catch (OAuthProblemException e) {
+            logger.debug("Authz request failed", e);
             return buildBadOAuthRequestResponse(e);
         }
     }
@@ -88,6 +99,8 @@ public class OAuthResource {
     @Consumes("application/x-www-form-urlencoded")
     @Produces("application/json")
     public Response token(@Context HttpServletRequest request, MultivaluedMap<String, String> form) throws OAuthSystemException {
+
+        logger.debug("Token request received");
 
         // Attempt to build an OAuth request from the HTTP request.
         OAuthTokenRequest oauthRequest;
@@ -128,6 +141,8 @@ public class OAuthResource {
         switch (grantType) {
             case AUTHORIZATION_CODE:
 
+                logger.debug("Requesting token for authz code");
+
                 // Get the authorization code from the request.
                 Authorisation authorisation = database.getAuthorisation(oauthRequest.getCode());
                 if (authorisation == null)
@@ -146,6 +161,8 @@ public class OAuthResource {
                         System.currentTimeMillis() + TOKEN_LIFETIME); // + 1 day
                 database.deleteAuthorisation(authorisation.getCode());
 
+                logger.debug("Swapping authz code {} for token {}", authorisation.getCode(), token.getToken());
+
                 // todo
                 // check the authorization code hasn't expired
 //              if(System.currentTimeMillis() > authorisation.getExpirationTime())
@@ -157,6 +174,8 @@ public class OAuthResource {
 //                    return buildBadRequestResponse("Authorization code has not been granted by a user");
                 break;
             case REFRESH_TOKEN:
+
+                logger.debug("Requesting token refresh");
 
                 // Get the refresh token from the request.
                 String refreshToken = oauthRequest.getRefreshToken();
@@ -171,10 +190,14 @@ public class OAuthResource {
                 if(!token.getClient().getId().equals(oauthRequest.getClientId()))
                     return buildBadRequestResponse("Current client does not match the one in the token");
 
+                String previousToken = token.getToken();
+
                 token.setToken(oauthIssuerImpl.accessToken());
                 token.setRefreshToken(oauthIssuerImpl.refreshToken());
                 token.setExpiresAt(System.currentTimeMillis() + TOKEN_LIFETIME);
                 database.updateToken(token);
+
+                logger.debug("Refreshed token from {} to {}", previousToken, token.getToken());
 
                 break;
             default:
@@ -183,10 +206,12 @@ public class OAuthResource {
 
         database.updateToken(token);
 
+        logger.debug("Token request succeeded");
+
         OAuthResponse oAuthResponse = OAuthASResponse
                         .tokenResponse(HttpServletResponse.SC_OK)
                         .setAccessToken(token.getToken())
-                        .setExpiresIn(Long.toString(token.getExpiresAt() / 1000))
+                        .setExpiresIn(Long.toString((token.getExpiresAt() - System.currentTimeMillis()) / 1000))
                         .setRefreshToken(token.getRefreshToken())
                         .setTokenType(TokenType.BEARER.toString())
                         .buildJSONMessage();
@@ -196,6 +221,9 @@ public class OAuthResource {
     }
 
     private Response buildBadOAuthRequestResponse(OAuthProblemException e) throws OAuthSystemException {
+
+        logger.error("Request failed", e);
+
         OAuthResponse res = OAuthASResponse
                 .errorResponse(HttpServletResponse.SC_BAD_REQUEST)
                 .error(e)
@@ -206,6 +234,7 @@ public class OAuthResource {
     }
 
     private Response buildBadRequestResponse(String message) {
+        logger.error("Request failed: {}", message);
         return Response
                 .status(Response.Status.BAD_REQUEST)
                 .entity(message)

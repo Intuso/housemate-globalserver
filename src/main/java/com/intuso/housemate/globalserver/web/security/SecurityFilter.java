@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Date;
 
 /**
  * Created by tomc on 21/01/17.
@@ -66,14 +67,17 @@ public class SecurityFilter implements Filter {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
 
             if (isOAuthRequest(httpRequest)) {
+                logger.debug("Received oAuth request");
                 handleOAuthRequest(httpRequest, httpResponse, chain);
-            } else if (isValidSession(httpRequest))
+            } else if (isValidSession(httpRequest)) {
+                logger.debug("Received request for session {}", httpRequest.getSession().getId());
                 chain.doFilter(request, response);
-            else if (isUnsecuredEndpoint(httpRequest))
+            } else if (isUnsecuredEndpoint(httpRequest)) {
+                logger.debug("Received request for unsecured endpoint {} {}", httpRequest.getMethod(), httpRequest.getRequestURI());
                 chain.doFilter(request, response);
-
-            // not authorised to access the resource so redirect to login page
-            else {
+            } else {
+                // not authorised to access the resource so redirect to login page
+                logger.debug("No oAuth or session for secured endpoint. Redirecting to login page");
                 String encodedURL = URLEncoder.encode(getOriginalUrl(httpRequest), "UTF-8");
                 httpResponse.sendRedirect(httpRequest.getContextPath() + httpRequest.getContextPath() + LOGIN_HTML + "?" + NEXT_PARAM + "=" + encodedURL);
             }
@@ -101,6 +105,7 @@ public class SecurityFilter implements Filter {
             // Get the access token
             String tokenString = oauthRequest.getAccessToken();
             if(tokenString == null) {
+                logger.error("Received oAuth request with no token");
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No OAuth access token in request");
                 return;
             }
@@ -108,15 +113,19 @@ public class SecurityFilter implements Filter {
             // get the token object
             Token token = database.getTokenForToken(tokenString);
             if(token == null) {
+                logger.error("Received oAuth for unknown token {}", tokenString);
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown access token" + tokenString);
                 return;
             }
 
             // validate the token
             if(token.getExpiresAt() < System.currentTimeMillis()) {
+                logger.error("Received oAuth request for expired token {} (Expired {})", tokenString, new Date(token.getExpiresAt()));
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token has expired");
                 return;
             }
+
+            logger.debug("Received oAuth request for valid token {}", tokenString);
 
             // put the details in the session
             HttpSession session = request.getSession(true);
