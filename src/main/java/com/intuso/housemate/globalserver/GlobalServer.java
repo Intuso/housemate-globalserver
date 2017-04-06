@@ -3,8 +3,8 @@ package com.intuso.housemate.globalserver;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.intuso.housemate.globalserver.database.mongo.ioc.MongoDatabaseModule;
 import com.intuso.housemate.globalserver.ioc.GlobalServerModule;
+import com.intuso.housemate.webserver.database.mongo.ioc.MongoDatabaseModule;
 import com.intuso.utilities.collection.ManagedCollection;
 import com.intuso.utilities.collection.ManagedCollectionFactory;
 import com.intuso.utilities.properties.api.PropertyRepository;
@@ -26,8 +26,6 @@ public class GlobalServer {
 
     public final static String HOUSEMATE_CONFIG_DIR = "conf.dir";
     public final static String HOUSEMATE_PROPS_FILE = "conf.file";
-    public final static String APPLICATION_CONFIG_DIR = "application.conf.dir";
-    public final static String APPLICATION_PROPS_FILE = "application.conf.file";
 
     public static void main(String[] args) throws Exception {
 
@@ -41,8 +39,6 @@ public class GlobalServer {
 
         defaultProperties.set(HOUSEMATE_CONFIG_DIR, System.getProperty("user.home") + File.separator + ".housemate");
         defaultProperties.set(HOUSEMATE_PROPS_FILE, "housemate.props");
-        defaultProperties.set(APPLICATION_CONFIG_DIR, "./");
-        defaultProperties.set(APPLICATION_PROPS_FILE, "housemate.props");
 
         // read the command lines args now so we can use them to setup the file properties
         CommandLinePropertyRepository clProperties = new CommandLinePropertyRepository(managedCollectionFactory, defaultProperties, args);
@@ -59,11 +55,11 @@ public class GlobalServer {
 
         // get the props file
         File props_file = new File(configDirectory, clProperties.get(HOUSEMATE_PROPS_FILE));
-        FilePropertyRepository systemProperties = null;
+        FilePropertyRepository propsFile = null;
         try {
             if(!props_file.exists())
                 props_file.createNewFile();
-            systemProperties = new FilePropertyRepository(managedCollectionFactory, defaultProperties, props_file);
+            propsFile = new FilePropertyRepository(managedCollectionFactory, defaultProperties, props_file);
         } catch (FileNotFoundException e) {
             logger.warn("Could not find system properties file \"" + props_file.getAbsolutePath() + "\"");
         } catch (IOException e) {
@@ -71,29 +67,9 @@ public class GlobalServer {
             e.printStackTrace();
         }
 
-        configDirectory = new File(clProperties.get(APPLICATION_CONFIG_DIR));
-        // create the directory if it does not exist
-        if(!configDirectory.exists())
-            configDirectory.mkdirs();
-        // get the props file
-        props_file = new File(configDirectory, clProperties.get(APPLICATION_PROPS_FILE));
-        FilePropertyRepository applicationProperties = null;
-        try {
-            if(!props_file.exists())
-                props_file.createNewFile();
-            applicationProperties = new FilePropertyRepository(managedCollectionFactory,
-                    systemProperties != null ? systemProperties : defaultProperties, props_file);
-        } catch (FileNotFoundException e) {
-            System.out.println("WARN: Could not find application properties file \"" + props_file.getAbsolutePath() + "\"");
-        } catch (IOException e) {
-            System.err.println("ERROR: Could not read application properties from file");
-            e.printStackTrace();
-        }
-
         // wrap the defaults and file properties with the command line properties
         PropertyRepository properties = new CommandLinePropertyRepository(managedCollectionFactory,
-                applicationProperties != null ? applicationProperties :
-                        systemProperties != null ? systemProperties : defaultProperties, args);
+                        propsFile != null ? propsFile : defaultProperties, args);
 
         // configure the defaults
         GlobalServerModule.configureDefaults(defaultProperties);

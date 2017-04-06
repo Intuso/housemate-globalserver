@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.servers.ioc;
+package com.intuso.housemate.globalserver.ioc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -14,12 +14,12 @@ import javax.jms.Connection;
 /**
  * Created by tomc on 24/01/17.
  */
-public class ServerModule extends AbstractModule {
+public class ClientServerModule extends AbstractModule {
 
     private final String userId;
     private final String address;
 
-    public ServerModule(String userId, String address) {
+    public ClientServerModule(String userId, String address) {
         this.userId = userId;
         this.address = address;
     }
@@ -28,8 +28,8 @@ public class ServerModule extends AbstractModule {
     protected void configure() {
         install(new SimpleProxyModule());
         install(new JMSMessagingModule.Javabin());
-        bind(String.class).annotatedWith(ServerAddress.class).toInstance(address);
-        bind(Connection.class).toProvider(ConnectionProvider.class).in(Scopes.SINGLETON);
+        bind(String.class).annotatedWith(ClientAddress.class).toInstance(address);
+        bind(Connection.class).toProvider(ClientConnectionProvider.class).in(Scopes.SINGLETON);
     }
 
     @Provides

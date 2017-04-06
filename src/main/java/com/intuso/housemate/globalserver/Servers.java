@@ -1,15 +1,15 @@
-package com.intuso.housemate.globalserver.servers;
+package com.intuso.housemate.globalserver;
 
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.intuso.housemate.client.v1_0.proxy.object.ProxyServer;
-import com.intuso.housemate.globalserver.database.Database;
-import com.intuso.housemate.globalserver.database.model.Client;
-import com.intuso.housemate.globalserver.database.model.User;
-import com.intuso.housemate.globalserver.servers.ioc.ServerModule;
+import com.intuso.housemate.globalserver.ioc.ClientServerModule;
+import com.intuso.housemate.webserver.database.Database;
+import com.intuso.housemate.webserver.database.model.User;
 import com.intuso.utilities.collection.ManagedCollection;
+import com.intuso.utilities.webserver.oauth.model.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,9 +69,9 @@ public class Servers extends AbstractIdleService implements Database.Listener {
         try {
             String serverAddress = user.getServerAddress();
             if (serverAddress != null) {
-                ProxyServer.Simple server = injector.createChildInjector(new ServerModule(user.getId(), user.getServerAddress())).getInstance(ProxyServer.Simple.class);
-                server.start();
+                ProxyServer.Simple server = injector.createChildInjector(new ClientServerModule(user.getId(), user.getServerAddress())).getInstance(ProxyServer.Simple.class);
                 servers.put(user.getId(), server);
+                server.start();
             }
         } catch(Throwable t) {
             logger.error("Failed to create server for user {}", user.getId(), t);

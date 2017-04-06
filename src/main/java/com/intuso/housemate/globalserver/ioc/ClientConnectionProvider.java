@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.servers.ioc;
+package com.intuso.housemate.globalserver.ioc;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -11,12 +11,12 @@ import javax.jms.JMSException;
 /**
  * Created by tomc on 24/01/17.
  */
-public class ConnectionProvider implements Provider<Connection> {
+public class ClientConnectionProvider implements Provider<Connection> {
 
     private final String address;
 
     @Inject
-    public ConnectionProvider(@ServerAddress String address) {
+    public ClientConnectionProvider(@ClientAddress String address) {
         this.address = address;
     }
 

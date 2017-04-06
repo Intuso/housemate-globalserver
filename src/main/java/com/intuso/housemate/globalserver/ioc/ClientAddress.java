@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.servers.ioc;
+package com.intuso.housemate.globalserver.ioc;
 
 import com.google.inject.BindingAnnotation;
 
@@ -10,5 +10,5 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @BindingAnnotation
-public @interface ServerAddress {
+public @interface ClientAddress {
 }

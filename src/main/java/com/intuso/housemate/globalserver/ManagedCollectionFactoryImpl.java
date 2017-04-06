@@ -1,4 +1,4 @@
-package com.intuso.housemate.globalserver.ioc;
+package com.intuso.housemate.globalserver;
 
 import com.google.common.collect.Lists;
 import com.intuso.utilities.collection.ManagedCollection;
