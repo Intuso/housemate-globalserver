@@ -40,7 +40,7 @@ public class GlobalServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), Service.class).addBinding().to(Servers.class);
         bind(Servers.class).in(Scopes.SINGLETON);
 
-        install(new HousemateWebServerModule(8090, ServerFilter.class));
+        install(new HousemateWebServerModule(8090, "HM_GS_SESSION", ServerFilter.class));
 
         bind(ManagedCollectionFactory.class).to(ManagedCollectionFactoryImpl.class);
         bind(ManagedCollectionFactoryImpl.class).in(Scopes.SINGLETON);
