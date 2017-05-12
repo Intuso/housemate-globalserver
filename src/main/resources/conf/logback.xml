@@ -26,6 +26,8 @@
     <logger name="org.mongodb" level="WARN" />
 
     <logger name="com.intuso.housemate.globalserver" level="DEBUG" />
+    <logger name="com.intuso.housemate.webserver" level="DEBUG" />
+    <logger name="com.intuso.utilities.webserver" level="DEBUG" />
 
     <root level="INFO">
         <appender-ref ref="MAIN-LOG"/>
