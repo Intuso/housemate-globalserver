@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "Stopping Intuso Housemate Node"
+echo "Stopping Intuso Housemate Globalserver"
 systemctl stop housemate-globalserver
 
 exit 0
