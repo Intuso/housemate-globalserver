@@ -17,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 /**
  * Created by tomc on 21/01/17.
@@ -30,9 +32,15 @@ public class GlobalServer {
     public static void main(String[] args) throws Exception {
 
         final ManagedCollectionFactory managedCollectionFactory = new ManagedCollectionFactory() {
+
             @Override
-            public <LISTENER> ManagedCollection<LISTENER> create() {
-                return new ManagedCollection<>(new CopyOnWriteArrayList<LISTENER>());
+            public <LISTENER> ManagedCollection<LISTENER> createSet() {
+                return new ManagedCollection<>(Collections.synchronizedSet(new HashSet<>()));
+            }
+
+            @Override
+            public <LISTENER> ManagedCollection<LISTENER> createList() {
+                return new ManagedCollection<>(Collections.synchronizedList(new LinkedList<>()));
             }
         };
         WriteableMapPropertyRepository defaultProperties = WriteableMapPropertyRepository.newEmptyRepository(managedCollectionFactory);
