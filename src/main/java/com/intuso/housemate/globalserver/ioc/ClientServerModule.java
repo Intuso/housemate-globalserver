@@ -27,7 +27,7 @@ public class ClientServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new SimpleProxyModule());
-        install(new JMSMessagingModule.Javabin());
+        install(new JMSMessagingModule());
         bind(String.class).annotatedWith(ClientAddress.class).toInstance(address);
         bind(Connection.class).toProvider(ClientConnectionProvider.class).in(Scopes.SINGLETON);
     }
